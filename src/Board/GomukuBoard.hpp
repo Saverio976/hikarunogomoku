@@ -7,8 +7,8 @@
 #include <bitset>
 #include <array>
 
-const int BOARD_SIZE = 20;
-const int BOARD_BITS = BOARD_SIZE * BOARD_SIZE;
+constexpr int BOARD_SIZE = 20;
+constexpr int BOARD_BITS = BOARD_SIZE * BOARD_SIZE;
 
 class GomukuBoard {
 public:
