@@ -1,0 +1,39 @@
+name: Compile
+
+on: [push, pull_request]
+
+jobs:
+  compile:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        compiler:
+          - llvm
+          - gcc
+        include:
+          - os: windows-latest
+            compiler: msvc
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Setup CPP
+        uses: aminya/setup-cpp@v1
+        with:
+          compiler: ${{ matrix.compiler }}
+          vcvarsall: ${{ contains(matrix.os, 'windows') }}
+          cmake: true
+          ninja: true
+          make: true
+          vcpkg: false
+          cppcheck: true
+          clangtidy: true
+
+      - name: Compile
+        run: make
