@@ -4,8 +4,10 @@
 #include <cstddef>
 #include <functional>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <cstring>
+#include <thread>
 
 class ProtocolConfig {
 public:
@@ -15,6 +17,47 @@ public:
     static constexpr std::size_t MAX_ARRAY_BUFFER_COMMAND_SEND = 3;
     // Number of turn max that can be stored. // TODO: use the same value as ../Board
     static constexpr std::size_t MAX_NUMBER_TURN = 20 * 20;
+};
+
+class ProtocolInfo {
+public:
+    enum GameType : std::size_t {
+        HUMAN_OPPONENT = 0,
+        OPPONENT_IS_BRAIN = 1,
+        TOURNAMENT = 2,
+        NETWORK_TOURNAMENT = 3,
+    };
+
+    enum Rule : std::size_t {
+        EXACT_FIVE_IN_A_ROW = 1,
+        CONTINUOUS_GAME = 2,
+        RENJU = 4,
+        CARO = 8,
+    };
+
+    static std::optional<std::size_t> getTimeoutTurn();
+    static std::optional<std::size_t> getTimeoutMatch();
+    static std::optional<std::size_t> getMaxMemory();
+    static std::optional<std::size_t> getTimeLeft();
+    static std::optional<GameType> getGameType();
+    static std::optional<bool> isExactFiveInARow();
+    static std::optional<bool> isContinuousGame();
+    static std::optional<bool> isRenju();
+    static std::optional<bool> isCaro();
+    // There is no evaluate function because is is required to ignore it in
+    // release mode...
+    static const std::optional<std::string> &getFolder();
+
+    static void setInfo(const std::string &info);
+
+private:
+    static std::optional<std::size_t> _timeout_turn;
+    static std::optional<std::size_t> _timeout_match;
+    static std::optional<std::size_t> _max_memory;
+    static std::optional<std::size_t> _time_left;
+    static std::optional<GameType> _game_type;
+    static std::size_t _rule;
+    static std::optional<std::string> _folder;
 };
 
 // Map on all buffer to send to the Gomoku Manager.
@@ -123,13 +166,17 @@ public:
             NULLPTR,
         };
 
-        // Create a position with X and Y and Type
-        Position(int x, int y, Type type);
-        // Create a position in form of "X,Y,Type
-        Position(const std::string &position);
-        // Create a position in form of "X,Y"
-        Position(const std::string &position, Type type);
         Position();
+
+        // This are static to be opti on memory allocation (static are not
+        // inside the allocated memory)
+
+        // Create a position with X and Y and Type
+        static Position fromValues(int x, int y, Type type);
+        // Create a position in form of "X,Y,Type
+        static Position fromString(const std::string &position);
+        // Create a position in form of "X,Y"
+        static Position fromString(const std::string &position, Type type);
 
         int x;
         int y;
@@ -185,6 +232,8 @@ public:
         const std::string &www = "www.example.com",
         const std::string &email = "example@ex.com");
 
+    static State getState();
+
 private:
     // METHODS ---------------------------------------------------------------
 
@@ -228,4 +277,6 @@ private:
     > _lastTurnPositions;
 
     static InternalState _internalState;
+
+    static std::thread _thread;
 };

@@ -1,8 +1,12 @@
 #include <array>
 #include <cstddef>
+#include <cstdio>
 #include <iostream>
 #include <mutex>
+#include <optional>
+#include <sstream>
 #include <string>
+#include <thread>
 #include "Protocol.hpp"
 
 // ---------------------------------------------------------------------------
@@ -40,12 +44,23 @@ std::array<
 Protocol::InternalState Protocol::_internalState =
     Protocol::InternalState::NO_STATE;
 
+std::thread Protocol::_thread;
+
 void Protocol::start()
 {
+    std::thread thread(Protocol::listenAndSendThreaded);
+
+    Protocol::_thread.swap(thread);
 }
 
 void Protocol::stop()
 {
+    if (Protocol::getState() != State::END) {
+        Protocol::_inputOutputMutex.lock();
+        Protocol::_state = Protocol::State::END;
+        Protocol::_inputOutputMutex.unlock();
+    }
+    Protocol::_thread.join();
 }
 
 void Protocol::addCommandListener(Command command, std::function<void(Command)> listener)
@@ -124,21 +139,30 @@ void Protocol::listenAndSendThreaded()
     while (isRunning)
     {
         switch (_state) {
-            case State::WAITING_BRAIN_RESPONSE:
+            case State::WAITING_MANAGER_COMMAND:
                 std::cin >> bufferReceive;
                 if (bufferReceive == "") {
                     continue;
                 }
+                if (bufferReceive.ends_with("\r\n")) {
+                    bufferReceive.pop_back();
+                    bufferReceive.pop_back();
+                } else if (bufferReceive.ends_with("\n")) {
+                    bufferReceive.pop_back();
+                } else if (bufferReceive.ends_with("\r")) {
+                    bufferReceive.pop_back();
+                }
                 understandReceiveString(bufferReceive);
+                bufferReceive.clear();
                 break;
-            case State::WAITING_MANAGER_COMMAND:
+            case State::WAITING_BRAIN_RESPONSE:
                 sendResponses();
                 break;
             default:
                 break;
         }
         _inputOutputMutex.lock();
-        isRunning = _state == State::END;
+        isRunning = _state != State::END;
         _inputOutputMutex.unlock();
     }
 }
@@ -152,7 +176,7 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
     } else if (bufferReceive.starts_with("START ")) {
         _commandListeners[static_cast<std::size_t>(Command::START)](Command::START);
     } else if (bufferReceive.starts_with("TURN ")) {
-        _lastTurnPositions[0] = Protocol::Position(bufferReceive.substr(5));
+        _lastTurnPositions[0] = Protocol::Position::fromString(bufferReceive.substr(5));
         if (_lastTurnPositions[0].type == Protocol::Position::Type::NULLPTR) {
             // TODO: Error
             return;
@@ -177,6 +201,8 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
         _inputOutputMutex.unlock();
         _commandListeners[static_cast<std::size_t>(Command::END)](Command::END);
     } else {
+        // TODO: Error
+        return;
     }
 
     if (changeState) {
@@ -196,7 +222,7 @@ bool Protocol::understandInCommandBoard(const std::string &bufferReceive)
         if (_lastTurnPositions[i].type != Position::Type::NULLPTR) {
             continue;
         }
-        _lastTurnPositions[i] = Protocol::Position(bufferReceive);
+        _lastTurnPositions[i] = Protocol::Position::fromString(bufferReceive);
         break;
     }
     return false;
@@ -204,13 +230,29 @@ bool Protocol::understandInCommandBoard(const std::string &bufferReceive)
 
 void Protocol::sendResponses()
 {
+    static std::size_t indexCur = 0;
+
+    indexCur = 0;
     MAP_WRAPPER_TO_BUFFER_SEND(
         std::cout << _bufferCommandSend[i].data() << std::endl;
+        _bufferCommandSend[i].fill('\0');
+        ++indexCur;
     )
+    if (indexCur != 0) {
+        _inputOutputMutex.lock();
+        _state = State::WAITING_MANAGER_COMMAND;
+        _inputOutputMutex.unlock();
+    }
 }
 
 void Protocol::defaultListener(Protocol::Command /* unused */)
 {
+    // TODO: Show debug command
+}
+
+Protocol::State Protocol::getState()
+{
+    return _state;
 }
 
 // ---------------------------------------------------------------------------
@@ -225,18 +267,20 @@ Protocol::Message::Message(Status status, const std::string &message):
 // ---------------------------------------------------------------------------
 // Protocol::Position
 
-Protocol::Position::Position(int x, int y, Type type):
-    x(x),
-    y(y),
-    type(type)
+Protocol::Position Protocol::Position::fromValues(int x, int y, Type type)
 {
+    Position pos;
+
+    pos.x = x;
+    pos.y = y;
+    pos.type = type;
+    return pos;
 }
 
-Protocol::Position::Position(const std::string &position):
-    x(0),
-    y(0),
-    type(Type::NULLPTR)
+Protocol::Position Protocol::Position::fromString(const std::string &position)
 {
+    Position pos;
+
     std::size_t index_first_virgula = position.find(',');
     std::size_t index_second_virgula = position.find(
         ',',
@@ -244,7 +288,7 @@ Protocol::Position::Position(const std::string &position):
 
     if (index_first_virgula == std::string::npos ||
             index_second_virgula == std::string::npos) {
-        return;
+        return pos;
     }
     const std::string x_str = position.substr(0, index_first_virgula);
     const std::string y_str = position.substr(
@@ -254,28 +298,28 @@ Protocol::Position::Position(const std::string &position):
     if (x_str.empty() || y_str.empty() ||
             !std::all_of(x_str.begin(), x_str.end(), ::isdigit) ||
             !std::all_of(y_str.begin(), y_str.end(), ::isdigit)) {
-        return;
+        return pos;
     }
-    x = std::stoi(x_str);
-    y = std::stoi(y_str);
+    pos.x = std::stoi(x_str);
+    pos.y = std::stoi(y_str);
     std::size_t type_int = std::stoi(position.substr(index_second_virgula + 1));
     if (type_int == 1) {
-        type = Type::ME;
+        pos.type = Type::ME;
     } else if (type_int == 2) {
-        type = Type::OPPONENT;
+        pos.type = Type::OPPONENT;
+    } else {
+        pos.type = Type::NULLPTR;
     }
+    return pos;
 }
 
-Protocol::Position::Position(const std::string &position, Type type):
-    x(0),
-    y(0),
-    type(type)
+Protocol::Position Protocol::Position::fromString(const std::string &position, Type type)
 {
+    Position pos;
     std::size_t index_first_virgula = position.find(',');
 
     if (index_first_virgula == std::string::npos) {
-        type = Type::NULLPTR;
-        return;
+        return pos;
     }
     const std::string x_str = position.substr(0, index_first_virgula);
     const std::string y_str = position.substr(index_first_virgula + 1);
@@ -283,11 +327,12 @@ Protocol::Position::Position(const std::string &position, Type type):
     if (x_str.empty() || y_str.empty() ||
             !std::all_of(x_str.begin(), x_str.end(), ::isdigit) ||
             !std::all_of(y_str.begin(), y_str.end(), ::isdigit)) {
-        type = Type::NULLPTR;
-        return;
+        return pos;
     }
-    x = std::stoi(x_str);
-    y = std::stoi(y_str);
+    pos.x = std::stoi(x_str);
+    pos.y = std::stoi(y_str);
+    pos.type = type;
+    return pos;
 }
 
 Protocol::Position::Position():
@@ -295,4 +340,137 @@ Protocol::Position::Position():
     y(0),
     type(Type::NULLPTR)
 {
+}
+
+// ---------------------------------------------------------------------------
+// Protocol::Info
+
+std::optional<std::size_t> ProtocolInfo::_timeout_turn = std::nullopt;
+
+std::optional<std::size_t> ProtocolInfo::_timeout_match = std::nullopt;
+
+std::optional<std::size_t> ProtocolInfo::_max_memory = std::nullopt;
+
+std::optional<std::size_t> ProtocolInfo::_time_left = std::nullopt;
+
+std::optional<ProtocolInfo::GameType> ProtocolInfo::_game_type = std::nullopt;
+
+std::size_t ProtocolInfo::_rule = 0;
+
+std::optional<std::string> ProtocolInfo::_folder = std::nullopt;
+
+std::optional<std::size_t> ProtocolInfo::getTimeoutTurn()
+{
+    return ProtocolInfo::_timeout_turn;
+}
+
+std::optional<std::size_t> ProtocolInfo::getTimeoutMatch()
+{
+    return ProtocolInfo::_timeout_match;
+}
+
+std::optional<std::size_t> ProtocolInfo::getMaxMemory()
+{
+    return ProtocolInfo::_max_memory;
+}
+
+std::optional<std::size_t> ProtocolInfo::getTimeLeft()
+{
+    return ProtocolInfo::_time_left;
+}
+
+std::optional<ProtocolInfo::GameType> ProtocolInfo::getGameType()
+{
+    return ProtocolInfo::_game_type;
+}
+
+std::optional<bool> ProtocolInfo::isExactFiveInARow()
+{
+    return static_cast<bool>(
+        ProtocolInfo::_rule &
+        static_cast<std::size_t>(Rule::EXACT_FIVE_IN_A_ROW));
+}
+
+std::optional<bool> ProtocolInfo::isContinuousGame()
+{
+    return static_cast<bool>(
+        ProtocolInfo::_rule &
+        static_cast<std::size_t>(Rule::CONTINUOUS_GAME));
+}
+
+std::optional<bool> ProtocolInfo::isRenju()
+{
+    return static_cast<bool>(
+        ProtocolInfo::_rule &
+        static_cast<std::size_t>(Rule::RENJU));
+}
+
+std::optional<bool> ProtocolInfo::isCaro()
+{
+    return static_cast<bool>(
+        ProtocolInfo::_rule &
+        static_cast<std::size_t>(Rule::CARO));
+}
+
+const std::optional<std::string> &ProtocolInfo::getFolder()
+{
+    return ProtocolInfo::_folder;
+}
+
+void ProtocolInfo::setInfo(const std::string &info)
+{
+    std::stringstream ss;
+
+    if (info.empty()) {
+        return;
+    }
+    int index_first_space = info.find(' ');
+    if (index_first_space == std::string::npos) {
+        return;
+    }
+    std::string value = info.substr(index_first_space + 1);
+    ss << value;
+    if (info.starts_with("timeout_turn")) {
+        std::size_t tmp;
+        ss >> tmp;
+        ProtocolInfo::_timeout_turn = tmp;
+    } else if (info.starts_with("timeout_match")) {
+        std::size_t tmp;
+        ss >> tmp;
+        ProtocolInfo::_timeout_match = tmp;
+    } else if (info.starts_with("max_memory")) {
+        std::size_t tmp;
+        ss >> tmp;
+        ProtocolInfo::_max_memory = tmp;
+    } else if (info.starts_with("time_left")) {
+        std::size_t tmp;
+        ss >> tmp;
+        ProtocolInfo::_time_left = tmp;
+    } else if (info.starts_with("game_type")) {
+        if (value == "0") {
+            ProtocolInfo::_game_type = GameType::HUMAN_OPPONENT;
+        } else if (value == "1") {
+            ProtocolInfo::_game_type = GameType::OPPONENT_IS_BRAIN;
+        } else if (value == "2") {
+            ProtocolInfo::_game_type = GameType::TOURNAMENT;
+        } else if (value == "3") {
+            ProtocolInfo::_game_type = GameType::NETWORK_TOURNAMENT;
+        } else {
+            // TODO: Error
+            return;
+        }
+    } else if (info.starts_with("rule")) {
+        if (value != "1" && value != "2" && value != "4" && value != "8") {
+            // TODO: Error
+            return;
+        }
+        std::size_t tmp;
+        ss >> tmp;
+        ProtocolInfo::_rule += tmp;
+    } else if (info.starts_with("folder")) {
+        ProtocolInfo::_folder = value;
+    } else {
+        // TODO: Error
+        return;
+    }
 }
