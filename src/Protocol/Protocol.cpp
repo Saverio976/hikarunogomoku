@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <algorithm>
 #include "Protocol.hpp"
 
 // ---------------------------------------------------------------------------
