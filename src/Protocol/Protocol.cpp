@@ -173,6 +173,9 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
 
     if (_internalState == InternalState::IN_BOARD_COMMAND) {
         changeState = understandInCommandBoard(bufferReceive);
+        if (changeState) {
+            _commandListeners[static_cast<std::size_t>(Command::BOARD)](Command::BOARD);
+        }
     } else if (bufferReceive.starts_with("START ")) {
         _commandListeners[static_cast<std::size_t>(Command::START)](Command::START);
     } else if (bufferReceive.starts_with("TURN ")) {
