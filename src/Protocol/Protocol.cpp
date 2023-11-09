@@ -12,6 +12,9 @@
 // ---------------------------------------------------------------------------
 // Protocol
 
+static const std::string ErrorInvalidPosition = "Invalid Position";
+static const std::string ErrorUnknownCommand = "Invalid Position";
+
 Protocol Protocol::_instance;
 
 std::array<
@@ -70,7 +73,7 @@ void Protocol::addCommandListener(Command command, std::function<void(Command)> 
 
 void Protocol::sendStartResponse(const Message &message)
 {
-    ADD_WRAPPER_TO_BUFFER_SEND(
+    ADD_WRAPPER_TO_BUFFER_SEND(true,
         switch (message.status) {
             case Status::OK:
                 ADD_TO_CURRENT_BUFFER_SEND("OK");
@@ -87,7 +90,7 @@ void Protocol::sendStartResponse(const Message &message)
 
 void Protocol::sendTurnResponse(int x, int y)
 {
-    ADD_WRAPPER_TO_BUFFER_SEND(
+    ADD_WRAPPER_TO_BUFFER_SEND(true,
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(x).data());
         ADD_TO_CURRENT_BUFFER_SEND(" ");
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(y).data());
@@ -96,7 +99,7 @@ void Protocol::sendTurnResponse(int x, int y)
 
 void Protocol::sendBeginResponse(int x, int y)
 {
-    ADD_WRAPPER_TO_BUFFER_SEND(
+    ADD_WRAPPER_TO_BUFFER_SEND(true,
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(x).data());
         ADD_TO_CURRENT_BUFFER_SEND(" ");
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(y).data());
@@ -105,7 +108,7 @@ void Protocol::sendBeginResponse(int x, int y)
 
 void Protocol::sendBoardResponse(int x, int y)
 {
-    ADD_WRAPPER_TO_BUFFER_SEND(
+    ADD_WRAPPER_TO_BUFFER_SEND(true,
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(x).data());
         ADD_TO_CURRENT_BUFFER_SEND(" ");
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(y).data());
@@ -120,7 +123,7 @@ void Protocol::sendAboutResponse(
     const std::string &www,
     const std::string &email)
 {
-    ADD_WRAPPER_TO_BUFFER_SEND(
+    ADD_WRAPPER_TO_BUFFER_SEND(true,
         ADD_TO_CURRENT_BUFFER_SEND_3("name=\"", name.data(), "\"");
         ADD_TO_CURRENT_BUFFER_SEND_3(", version=\"", version.data(), "\"");
         ADD_TO_CURRENT_BUFFER_SEND_3(", author=\"", author.data(), "\"");
@@ -128,9 +131,46 @@ void Protocol::sendAboutResponse(
         ADD_TO_CURRENT_BUFFER_SEND_3(", www=\"", www.data(), "\"");
         ADD_TO_CURRENT_BUFFER_SEND_3(", email=\"", email.data(), "\"");
     )
-    _inputOutputMutex.lock();
-    _state = State::WAITING_MANAGER_COMMAND;
-    _inputOutputMutex.unlock();
+}
+
+void Protocol::sendUnknown(const std::string &message)
+{
+    if (Protocol::getState() != State::WAITING_BRAIN_RESPONSE) {
+        return;
+    }
+    ADD_WRAPPER_TO_BUFFER_SEND(true,
+        ADD_TO_CURRENT_BUFFER_SEND_2("UNKNOWN ", message.data());
+    )
+}
+
+void Protocol::sendError(const std::string &message)
+{
+    if (Protocol::getState() != State::WAITING_BRAIN_RESPONSE) {
+        return;
+    }
+    ADD_WRAPPER_TO_BUFFER_SEND(true,
+        ADD_TO_CURRENT_BUFFER_SEND_2("ERROR ", message.data());
+    )
+}
+
+void Protocol::sendMessage(const std::string &message)
+{
+    if (Protocol::getState() != State::WAITING_BRAIN_RESPONSE) {
+        return;
+    }
+    ADD_WRAPPER_TO_BUFFER_SEND(false,
+        ADD_TO_CURRENT_BUFFER_SEND_2("MESSAGE ", message.data());
+    )
+}
+
+void Protocol::sendDebug(const std::string &message)
+{
+    if (Protocol::getState() != State::WAITING_BRAIN_RESPONSE) {
+        return;
+    }
+    ADD_WRAPPER_TO_BUFFER_SEND(false,
+        ADD_TO_CURRENT_BUFFER_SEND_2("DEBUG ", message.data());
+    )
 }
 
 void Protocol::listenAndSendThreaded()
@@ -158,12 +198,10 @@ void Protocol::listenAndSendThreaded()
                 understandReceiveString(bufferReceive);
                 bufferReceive.clear();
                 break;
-            case State::WAITING_BRAIN_RESPONSE:
-                sendResponses();
-                break;
             default:
                 break;
         }
+        sendResponses();
         _inputOutputMutex.lock();
         isRunning = _state != State::END;
         _inputOutputMutex.unlock();
@@ -173,6 +211,9 @@ void Protocol::listenAndSendThreaded()
 void Protocol::understandReceiveString(const std::string &bufferReceive)
 {
     bool changeState = true;
+    _inputOutputMutex.lock();
+    _state = State::WAITING_BRAIN_RESPONSE;
+    _inputOutputMutex.unlock();
 
     if (_internalState == InternalState::IN_BOARD_COMMAND) {
         changeState = understandInCommandBoard(bufferReceive);
@@ -184,7 +225,7 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
     } else if (bufferReceive.starts_with("TURN ")) {
         _lastTurnPositions[0] = Protocol::Position::fromString(bufferReceive.substr(5));
         if (_lastTurnPositions[0].type == Protocol::Position::Type::NULLPTR) {
-            // TODO: Error
+            sendError(ErrorInvalidPosition);
             return;
         }
         _commandListeners[static_cast<std::size_t>(Command::TURN)](Command::TURN);
@@ -207,13 +248,13 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
         _inputOutputMutex.unlock();
         _commandListeners[static_cast<std::size_t>(Command::END)](Command::END);
     } else {
-        // TODO: Error
+        sendUnknown(ErrorUnknownCommand);
         return;
     }
 
-    if (changeState) {
+    if (!changeState) {
         _inputOutputMutex.lock();
-        _state = State::WAITING_BRAIN_RESPONSE;
+        _state = State::WAITING_MANAGER_COMMAND;
         _inputOutputMutex.unlock();
     }
 }
@@ -244,7 +285,7 @@ void Protocol::sendResponses()
 
 void Protocol::defaultListener(Protocol::Command /* unused */)
 {
-    // TODO: Show debug command
+    sendUnknown(ErrorUnknownCommand);
 }
 
 Protocol::State Protocol::getState()
@@ -341,6 +382,9 @@ Protocol::Position::Position():
 
 // ---------------------------------------------------------------------------
 // Protocol::Info
+
+static const std::string ErrorGameType = "ErrorGameType";
+static const std::string ErrorRule = "ErrorRule";
 
 std::optional<std::size_t> ProtocolInfo::_timeout_turn = std::nullopt;
 
@@ -453,12 +497,12 @@ void ProtocolInfo::setInfo(const std::string &info)
         } else if (value == "3") {
             ProtocolInfo::_game_type = GameType::NETWORK_TOURNAMENT;
         } else {
-            // TODO: Error
+            Protocol::sendError(ErrorGameType);
             return;
         }
     } else if (info.starts_with("rule")) {
         if (value != "1" && value != "2" && value != "4" && value != "8") {
-            // TODO: Error
+            Protocol::sendError(ErrorRule);
             return;
         }
         std::size_t tmp;
@@ -467,7 +511,6 @@ void ProtocolInfo::setInfo(const std::string &info)
     } else if (info.starts_with("folder")) {
         ProtocolInfo::_folder = value;
     } else {
-        // TODO: Error
         return;
     }
 }

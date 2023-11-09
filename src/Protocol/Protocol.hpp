@@ -73,7 +73,7 @@ private:
 
 // Map on all buffer to send to the Gomoku Manager and stop to the first
 // available buffer.
-#define ADD_WRAPPER_TO_BUFFER_SEND(code_block)                                          \
+#define ADD_WRAPPER_TO_BUFFER_SEND(should_change_state, code_block)                     \
     _inputOutputMutex.lock();                                                           \
     for (std::size_t i = 0; i < ProtocolConfig::MAX_ARRAY_BUFFER_COMMAND_SEND; i++) {   \
         if (_bufferCommandSend[i][0] != '\0') {                                         \
@@ -82,7 +82,9 @@ private:
         code_block                                                                      \
         break;                                                                          \
     }                                                                                   \
-    _state = State::WAITING_MANAGER_COMMAND;                                            \
+    if (should_change_state) {                                                          \
+        _state = State::WAITING_MANAGER_COMMAND;                                        \
+    }                                                                                   \
     _inputOutputMutex.unlock();
 
 // Add to the current buffer selected by the index `i` the `const char *`
@@ -112,7 +114,7 @@ private:
 #define ADD_TO_CURRENT_BUFFER_SEND_3(data_string, data_string_2, data_string_3)         \
     if (std::strlen(data_string) + std::strlen(_bufferCommandSend[i].data()) +          \
             std::strlen(data_string_2) + std::strlen(data_string_3) <                   \
-            ProtocolConfig::MAX_BUFFER_COMMAND_SEND) {                                                  \
+            ProtocolConfig::MAX_BUFFER_COMMAND_SEND) {                                  \
         std::strcat(_bufferCommandSend[i].data(), data_string);                         \
         std::strcat(_bufferCommandSend[i].data(), data_string_2);                       \
         std::strcat(_bufferCommandSend[i].data(), data_string_3);                       \
@@ -232,6 +234,22 @@ public:
         const std::string &country = "france",
         const std::string &www = "www.example.com",
         const std::string &email = "example@ex.com");
+
+    // Send a message to the Gomoku Manager that says the Brain had not
+    // understood the Command.
+    static void sendUnknown(const std::string &message);
+    // Send a message to the Gomoku Manager that says the Brain had an error.
+    // This can happen if memory limit is too small or if the board is not the
+    // right size.
+    static void sendError(const std::string &message);
+    // Send a message to the Gomoku Manager and the Gomoku Manager will print
+    // it.
+    // The only timing to call this function is before responding to a Command
+    // from the Gomoku Manager.
+    static void sendMessage(const std::string &message);
+    // Send a debug message (same as the function `sendMessage` but it will not
+    // be printed on tournament).
+    static void sendDebug(const std::string &message);
 
     static State getState();
 
