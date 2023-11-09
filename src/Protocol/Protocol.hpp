@@ -82,6 +82,7 @@ private:
         code_block                                                                      \
         break;                                                                          \
     }                                                                                   \
+    _state = State::WAITING_MANAGER_COMMAND;                                            \
     _inputOutputMutex.unlock();
 
 // Add to the current buffer selected by the index `i` the `const char *`

@@ -128,6 +128,9 @@ void Protocol::sendAboutResponse(
         ADD_TO_CURRENT_BUFFER_SEND_3(", www=\"", www.data(), "\"");
         ADD_TO_CURRENT_BUFFER_SEND_3(", email=\"", email.data(), "\"");
     )
+    _inputOutputMutex.lock();
+    _state = State::WAITING_MANAGER_COMMAND;
+    _inputOutputMutex.unlock();
 }
 
 void Protocol::listenAndSendThreaded()
@@ -233,19 +236,10 @@ bool Protocol::understandInCommandBoard(const std::string &bufferReceive)
 
 void Protocol::sendResponses()
 {
-    static std::size_t indexCur = 0;
-
-    indexCur = 0;
     MAP_WRAPPER_TO_BUFFER_SEND(
         std::cout << _bufferCommandSend[i].data() << std::endl;
         _bufferCommandSend[i].fill('\0');
-        ++indexCur;
     )
-    if (indexCur != 0) {
-        _inputOutputMutex.lock();
-        _state = State::WAITING_MANAGER_COMMAND;
-        _inputOutputMutex.unlock();
-    }
 }
 
 void Protocol::defaultListener(Protocol::Command /* unused */)
