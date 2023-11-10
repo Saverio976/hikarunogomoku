@@ -5,3 +5,6 @@ target_sources(
     PRIVATE
     main.cpp
 )
+
+add_subdirectory(Board)
+add_subdirectory(Protocol)
