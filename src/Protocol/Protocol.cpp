@@ -231,7 +231,7 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
         }
         _commandListeners[static_cast<std::size_t>(Command::TURN)](Command::TURN);
     } else if (bufferReceive.starts_with("BEGIN")) {
-        _commandListeners[static_cast<std::size_t>(Command::ABOUT)](Command::BEGIN);
+        _commandListeners[static_cast<std::size_t>(Command::BEGIN)](Command::BEGIN);
     } else if (bufferReceive.starts_with("BOARD")) {
         for (std::size_t i = 0; i < ProtocolConfig::MAX_NUMBER_TURN; ++i) {
             _lastTurnPositions[i] = Protocol::Position();
@@ -239,7 +239,7 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
         _internalState = InternalState::IN_BOARD_COMMAND;
         changeState = false;
     } else if (bufferReceive.starts_with("INFO ")) {
-        _commandListeners[static_cast<std::size_t>(Command::ABOUT)](Command::INFO);
+        _commandListeners[static_cast<std::size_t>(Command::INFO)](Command::INFO);
     } else if (bufferReceive.starts_with("ABOUT")) {
         _commandListeners[static_cast<std::size_t>(Command::ABOUT)](Command::ABOUT);
     } else if (bufferReceive.starts_with("END")) {
