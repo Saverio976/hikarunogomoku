@@ -4,7 +4,6 @@
 #include <cstddef>
 #include <string>
 #include <vector>
-#include <format>
 #include <fstream>
 #include <sstream>
 #include <ostream>
@@ -117,17 +116,17 @@ private:
 
     std::string toString() const
     {
-        return std::format(
-            "Pattern{}("
-                "{}, {},"
-                    "{}, {}, {},"
-                        "{},"
-                            "{})",
-            BOARD_SIZE,
-                this->sizeX, this->sizeY,
-                    this->dataPlayer.to_string(), this->dataOpponent.to_string(), this->mask.to_string(),
-                        this->description,
-                            this->score);
+        std::string str;
+
+        str += "Pattern" + std::to_string(BOARD_SIZE) + "(";
+        str += std::to_string(this->sizeX) + ", ";
+        str += std::to_string(this->sizeY) + ", ";
+        str += this->dataPlayer.to_string() + ", ";
+        str += this->dataOpponent.to_string() + ", ";
+        str += this->mask.to_string() + ", ";
+        str += this->description + ", ";
+        str += std::to_string(this->score) + ")";
+        return str;
     }
 
     static std::string getDescription(std::ifstream &file)
