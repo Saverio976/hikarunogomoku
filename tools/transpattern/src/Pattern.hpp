@@ -93,7 +93,7 @@ public:
     {
         std::string impl;
 
-        impl += "#include \"Pattern.hpp\"\n";
+        impl += "#include \"Pattern" + std::to_string(BOARD_SIZE) + ".hpp\"\n";
         impl += "\n";
         impl += "std::vector<Pattern" + std::to_string(BOARD_SIZE) + "> Pattern" + std::to_string(BOARD_SIZE) + "::getPatterns()\n";
         impl += "{\n";
