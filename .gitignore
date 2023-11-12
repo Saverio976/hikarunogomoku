@@ -209,4 +209,12 @@ tags
 
 /build
 pbrain-hikarunogomoku
+pbrain-hikarunogomoku.exe
 /.cache
+
+#patterns
+tools/transpattern/build/*
+tools/transpattern/transpattern
+tools/transpattern/transpattern.exe
+src/Patterns/Pattern*.cpp
+src/Patterns/Pattern*.hpp
