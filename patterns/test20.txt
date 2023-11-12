@@ -27,14 +27,14 @@ x x x x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
 
 mask
-x y
-x1 y2
-x3 y3
+# x y
+0 0
+# x y
+0 1
 endmask
-# autant que tu veux
+# always put endmask at the end of the mask
 
-# commentaire
-# et je sais pas si tu as besoin d'autre truc ici ?
+# some comments
 
 score
 1.2

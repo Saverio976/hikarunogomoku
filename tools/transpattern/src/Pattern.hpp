@@ -184,6 +184,9 @@ private:
             if (buffer == "endmask") {
                 break;
             }
+            if (buffer.starts_with("#")) {
+                continue;
+            }
             std::stringstream ss(buffer);
             std::size_t x = 0;
             std::size_t y = 0;
