@@ -1,0 +1,40 @@
+desciption
+this is a description
+
+pattern
+20 20
+
+data
+O P x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+
+mask
+x y
+x1 y2
+x3 y3
+endmask
+# autant que tu veux
+
+# commentaire
+# et je sais pas si tu as besoin d'autre truc ici ?
+
+score
+1.2
