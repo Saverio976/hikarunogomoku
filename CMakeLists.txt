@@ -4,6 +4,10 @@ set(PROJECT_NAME "pbrain-hikarunogomoku")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_BUILD_TYPE Release)
+if (MSVC)
+    set(MAKE_CONFIGURATION_TYPES Release)
+endif()
 
 project(
     ${PROJECT_NAME}
@@ -15,6 +19,25 @@ add_executable(${PROJECT_NAME})
 
 add_subdirectory(src)
 
+# Transpil patterns from text file to cpp used by the brain
+add_custom_command(
+    TARGET ${PROJECT_NAME} PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -S "${CMAKE_SOURCE_DIR}/tools/transpattern" -B "${CMAKE_SOURCE_DIR}/tools/transpattern/build"
+    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_SOURCE_DIR}/tools/transpattern/build"
+)
+if (WIN32)
+    add_custom_command(
+        TARGET ${PROJECT_NAME} PRE_BUILD
+        COMMAND "${CMAKE_SOURCE_DIR}/tools/transpattern/transpattern.exe" "20" "${CMAKE_SOURCE_DIR}/patterns" "${CMAKE_SOURCE_DIR}/src/Patterns"
+    )
+else()
+    add_custom_command(
+        TARGET ${PROJECT_NAME} PRE_BUILD
+        COMMAND "${CMAKE_SOURCE_DIR}/tools/transpattern/transpattern" "20" "${CMAKE_SOURCE_DIR}/patterns" "${CMAKE_SOURCE_DIR}/src/Patterns"
+    )
+endif()
+
+# Copy executable binary of the brain to the root repo
 if (WIN32)
     add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD
