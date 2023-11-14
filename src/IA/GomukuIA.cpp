@@ -3,6 +3,7 @@
 //
 
 #include "GomukuIA.hpp"
+#include <climits>
 
 std::bitset<BOARD_BITS> reverse(std::bitset<BOARD_BITS> bitset) {
     std::bitset<BOARD_BITS> reversed;
