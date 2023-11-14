@@ -16,7 +16,7 @@ GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
     int score = 0;
-    Perfcounter::Counter(Perfcounter::PerfType::EVALUATE_BOARD);
+    Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
 
     for (int i = 0; i < BOARD_BITS; ++i) {
         for (auto& patternMatcher : patternMatchers) {

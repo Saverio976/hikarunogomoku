@@ -1,5 +1,5 @@
 desciption
-Win diagonal
+Win diagonal 2
 
 pattern
 20 20
