@@ -7,7 +7,7 @@ target_sources(
 )
 
 add_subdirectory(400Bits)
+add_subdirectory(Patterns)
 add_subdirectory(Board)
 add_subdirectory(Protocol)
 add_subdirectory(IA)
-add_subdirectory(Patterns)
