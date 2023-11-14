@@ -1,0 +1,41 @@
+desciption
+Vertical 3 next
+
+pattern
+20 20
+
+data
+x x x x x x x x x x x x x x x x x x x x
+P x x x x x x x x x x x x x x x x x x x
+P x x x x x x x x x x x x x x x x x x x
+P x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+
+mask
+# x y
+0 0
+# x y
+0 1
+# x y
+0 2
+# x y
+0 3
+endmask
+
+score
+30.0

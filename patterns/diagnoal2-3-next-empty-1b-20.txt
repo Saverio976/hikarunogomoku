@@ -1,0 +1,41 @@
+desciption
+diagonal2 3 next + empty 1
+
+pattern
+20 20
+
+data
+x x x P x x x x x x x x x x x x x x x x
+x x P x x x x x x x x x x x x x x x x x
+x P x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+
+mask
+# x y
+3 0
+# x y
+2 1
+# x y
+1 2
+# x y
+0 3
+endmask
+
+score
+30.0
