@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <bitset>
+#include "Bits.hpp"
 #include <fstream>
 #include <string>
 #include <iostream>
@@ -12,10 +12,10 @@
 
 class PatternMatcher {
 public:
-    PatternMatcher(std::bitset<BOARD_BITS> playerPattern, std::bitset<BOARD_BITS> opponentPattern, std::bitset<BOARD_BITS> careMask);
+    PatternMatcher(Bits400 playerPattern, Bits400 opponentPattern, Bits400 careMask);
     bool advance();
     void reset();
-    bool isMatch(const std::bitset<BOARD_BITS>& playerBoard, const std::bitset<BOARD_BITS>& opponentBoard) const;
+    bool isMatch(const Bits400& playerBoard, const Bits400& opponentBoard) const;
 private:
     int patterHeight = 0;
     int patternWidth = 0;
@@ -27,11 +27,11 @@ private:
     int getPatternWidth() const;
 
     // Patterns
-    std::bitset<BOARD_BITS> playerPattern;
-    std::bitset<BOARD_BITS> opponentPattern;
-    std::bitset<BOARD_BITS> careMask;
+    Bits400 playerPattern;
+    Bits400 opponentPattern;
+    Bits400 careMask;
 
-    std::bitset<BOARD_BITS> playerPatternCopy;
-    std::bitset<BOARD_BITS> opponentPatternCopy;
-    std::bitset<BOARD_BITS> careMaskCopy;
+    Bits400 playerPatternCopy;
+    Bits400 opponentPatternCopy;
+    Bits400 careMaskCopy;
 };

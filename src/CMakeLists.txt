@@ -6,6 +6,7 @@ target_sources(
     main.cpp
 )
 
+add_subdirectory(400Bits)
 add_subdirectory(Board)
 add_subdirectory(Protocol)
 add_subdirectory(IA)

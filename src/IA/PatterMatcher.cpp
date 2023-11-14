@@ -4,8 +4,8 @@
 
 #include "PatterMatcher.hpp"
 
-PatternMatcher::PatternMatcher(std::bitset<BOARD_BITS> playerPattern, std::bitset<BOARD_BITS> opponentPattern,
-                               std::bitset<BOARD_BITS> careMask) : playerPattern(playerPattern),
+PatternMatcher::PatternMatcher(Bits400 playerPattern, Bits400 opponentPattern,
+                               Bits400 careMask) : playerPattern(playerPattern),
                                                                    opponentPattern(opponentPattern),
                                                                    careMask(careMask) {
     playerPatternCopy = playerPattern;
@@ -43,9 +43,9 @@ void PatternMatcher::reset() {
     currentRow = 0;
 }
 
-bool PatternMatcher::isMatch(const std::bitset<BOARD_BITS>& playerBoard, const std::bitset<BOARD_BITS>& opponentBoard) const {
+bool PatternMatcher::isMatch(const Bits400& playerBoard, const Bits400& opponentBoard) const {
     if (!isValid) return false;
-    std::bitset<BOARD_BITS> combinedMismatch = ((playerBoard ^ playerPatternCopy) | (opponentBoard ^ opponentPatternCopy)) & careMaskCopy;
+    Bits400 combinedMismatch = ((playerBoard ^ playerPatternCopy) | (opponentBoard ^ opponentPatternCopy)) & careMaskCopy;
     return combinedMismatch.none();
 }
 
