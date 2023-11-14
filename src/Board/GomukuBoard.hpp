@@ -7,6 +7,7 @@
 #include "Bits.hpp"
 #include <array>
 #include <vector>
+#include <unordered_set>
 
 constexpr int BOARD_SIZE = 20;
 constexpr int BOARD_BITS = BOARD_SIZE * BOARD_SIZE;
@@ -23,4 +24,13 @@ public:
 private:
     bool isFirstMove() const;
     bool isAdjacentToOccupied(int x, int y) const;
+
+    struct pair_hash {
+        inline std::size_t operator()(const std::pair<int, int> &v) const {
+            return v.first * 31 + v.second;
+        }
+    };
+
+    std::unordered_set<std::pair<int, int>, pair_hash> possibleMoves;
+    void updatePossibleMoves(int x, int y, bool isSet);
 };
