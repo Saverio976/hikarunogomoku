@@ -218,3 +218,6 @@ tools/transpattern/transpattern
 tools/transpattern/transpattern.exe
 src/Patterns/Pattern*.cpp
 src/Patterns/Pattern*.hpp
+
+#liskvork
+/logs/*

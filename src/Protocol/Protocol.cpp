@@ -14,7 +14,7 @@
 // Protocol
 
 static const std::string ErrorInvalidPosition = "Invalid Position";
-static const std::string ErrorUnknownCommand = "Invalid Position";
+static const std::string ErrorUnknownCommand = "Invalid Unknow Command";
 
 Protocol Protocol::_instance;
 
@@ -93,7 +93,7 @@ void Protocol::sendTurnResponse(int x, int y)
 {
     ADD_WRAPPER_TO_BUFFER_SEND(true,
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(x).data());
-        ADD_TO_CURRENT_BUFFER_SEND(" ");
+        ADD_TO_CURRENT_BUFFER_SEND(",");
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(y).data());
     )
 }
@@ -102,7 +102,7 @@ void Protocol::sendBeginResponse(int x, int y)
 {
     ADD_WRAPPER_TO_BUFFER_SEND(true,
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(x).data());
-        ADD_TO_CURRENT_BUFFER_SEND(" ");
+        ADD_TO_CURRENT_BUFFER_SEND(",");
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(y).data());
     )
 }
@@ -111,7 +111,7 @@ void Protocol::sendBoardResponse(int x, int y)
 {
     ADD_WRAPPER_TO_BUFFER_SEND(true,
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(x).data());
-        ADD_TO_CURRENT_BUFFER_SEND(" ");
+        ADD_TO_CURRENT_BUFFER_SEND(",");
         ADD_TO_CURRENT_BUFFER_SEND(std::to_string(y).data());
     )
 }
@@ -177,14 +177,13 @@ void Protocol::sendDebug(const std::string &message)
 void Protocol::listenAndSendThreaded()
 {
     bool isRunning = true;
-    static std::string bufferReceive;
-    bufferReceive.reserve(ProtocolConfig::MAX_BUFFER_COMMAND_SEND);
 
     while (isRunning)
     {
         switch (_state) {
             case State::WAITING_MANAGER_COMMAND:
-                std::cin >> bufferReceive;
+                static std::string bufferReceive;
+                std::getline(std::cin, bufferReceive);
                 if (bufferReceive == "") {
                     continue;
                 }
@@ -224,7 +223,7 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
     } else if (bufferReceive.starts_with("START ")) {
         _commandListeners[static_cast<std::size_t>(Command::START)](Command::START);
     } else if (bufferReceive.starts_with("TURN ")) {
-        _lastTurnPositions[0] = Protocol::Position::fromString(bufferReceive.substr(5));
+        _lastTurnPositions[0] = Protocol::Position::fromString(bufferReceive.substr(5), Protocol::Position::Type::OPPONENT);
         if (_lastTurnPositions[0].type == Protocol::Position::Type::NULLPTR) {
             sendError(ErrorInvalidPosition);
             return;
@@ -249,7 +248,7 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
         _inputOutputMutex.unlock();
         _commandListeners[static_cast<std::size_t>(Command::END)](Command::END);
     } else {
-        sendUnknown(ErrorUnknownCommand);
+        sendUnknown(ErrorUnknownCommand + bufferReceive);
         return;
     }
 
@@ -286,7 +285,7 @@ void Protocol::sendResponses()
 
 void Protocol::defaultListener(Protocol::Command /* unused */)
 {
-    sendUnknown(ErrorUnknownCommand);
+    sendUnknown(ErrorUnknownCommand + "defaultListener");
 }
 
 Protocol::State Protocol::getState()
