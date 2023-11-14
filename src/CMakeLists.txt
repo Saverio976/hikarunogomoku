@@ -8,4 +8,5 @@ target_sources(
 
 add_subdirectory(Board)
 add_subdirectory(Protocol)
+add_subdirectory(IA)
 add_subdirectory(Patterns)
