@@ -38,6 +38,11 @@ target_include_directories(
     PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}"
 )
+target_include_directories(
+    transpattern_gen_cpp
+    PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/../400Bits"
+)
 
 target_link_libraries(
     ${PROJECT_NAME}

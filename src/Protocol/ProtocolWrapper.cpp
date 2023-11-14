@@ -27,7 +27,7 @@ ProtocolWrapper::ProtocolWrapper()
     Protocol::addCommandListener(Protocol::Command::BOARD, &ProtocolWrapper::sendMove);
     Protocol::addCommandListener(Protocol::Command::START, &ProtocolWrapper::sendStart);
     Protocol::addCommandListener(Protocol::Command::ABOUT, &ProtocolWrapper::sendAbout);
-    Protocol::addCommandListener(Protocol::Command::ABOUT, &ProtocolWrapper::endCallback);
+    Protocol::addCommandListener(Protocol::Command::END, &ProtocolWrapper::endCallback);
     Protocol::start();
 }
 
