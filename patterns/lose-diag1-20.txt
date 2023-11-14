@@ -40,4 +40,4 @@ mask
 endmask
 
 score
--8888.0
+0
