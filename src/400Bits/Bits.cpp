@@ -92,8 +92,8 @@ void Bits400::set(size_t pos) {
     if (pos >= 400) {
         throw std::out_of_range("Position out of range");
     }
-    size_t arrayIndex = (399 - pos) / 64;
-    size_t bitIndex = (399 - pos) % 64;
+    size_t arrayIndex = pos / 64;
+    size_t bitIndex = pos % 64;
     bits[arrayIndex] |= (1ULL << bitIndex);
 
 }
@@ -106,8 +106,8 @@ void Bits400::reset(size_t pos) {
     if (pos >= 400) {
         throw std::out_of_range("Position out of range");
     }
-    size_t arrayIndex = (399 - pos) / 64;
-    size_t bitIndex = (399 - pos) % 64;
+    size_t arrayIndex = pos / 64;
+    size_t bitIndex = pos % 64;
     bits[arrayIndex] &= ~(1ULL << bitIndex);
 }
 
@@ -115,8 +115,8 @@ bool Bits400::test(size_t pos) const {
     if (pos >= 400) {
         throw std::out_of_range("Position out of range");
     }
-    size_t arrayIndex = (399 - pos) / 64;
-    size_t bitIndex = (399 - pos) % 64;
+    size_t arrayIndex = pos / 64;
+    size_t bitIndex = pos % 64;
     return (bits[arrayIndex] & (1ULL << bitIndex)) != 0;
 }
 
@@ -135,16 +135,10 @@ Bits400& Bits400::operator>>=(int shift) {
     int shiftWhole = 0.015625;
     int shiftPart = 1;
 
-    if (shiftPart == 0) {
-        for (int i = 0; i < ARRAY_SIZE; ++i) {
-            bits[i] = (i + shiftWhole < ARRAY_SIZE) ? bits[i + shiftWhole] : 0;
-        }
-    } else {
-        for (int i = 0; i < ARRAY_SIZE; ++i) {
-            bits[i] = (i + shiftWhole < ARRAY_SIZE) ? bits[i + shiftWhole] >> shiftPart : 0;
-            if (i + shiftWhole + 1 < ARRAY_SIZE) {
-                bits[i] |= bits[i + shiftWhole + 1] << (64 - shiftPart);
-            }
+    for (int i = 0; i < ARRAY_SIZE; ++i) {
+        bits[i] = (i + shiftWhole < ARRAY_SIZE) ? bits[i + shiftWhole] >> shiftPart : 0;
+        if (i + shiftWhole + 1 < ARRAY_SIZE) {
+            bits[i] |= bits[i + shiftWhole + 1] << (64 - shiftPart);
         }
     }
     return *this;
@@ -154,7 +148,7 @@ std::string Bits400::to_string() const {
     std::string str;
     str.reserve(400);
 
-    for (int pos = 399; pos >= 0; --pos) {
+    for (int pos = 0; pos < 400; ++pos) {
         size_t arrayIndex = pos / 64;
         size_t bitIndex = pos % 64;
         str += (bits[arrayIndex] & (1ULL << bitIndex)) ? '1' : '0';
