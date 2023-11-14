@@ -2,6 +2,22 @@
 #include "GomukuIA.hpp"
 // #include "Pattern20.hpp"
 
+static GomukuBoard board;
+static GomukuAI ia(3);
+
+static std::pair<int, int> getMove() {
+    auto [x, y] = ia.findBestMove(board);
+    board.set(x, y, true);
+    return {x, y};
+}
+
+static std::pair<int, int> getMove(int x, int y) {
+    board.set(x, y, false);
+    auto [x2, y2] = ia.findBestMove(board);
+    board.set(x2, y2, true);
+    return {x2, y2};
+}
+
 int main()
 {
     //Protocol::start();
@@ -19,12 +35,5 @@ int main()
     //     std::cout << pattern.getMask().to_string() << std::endl;
     //     std::cout << std::endl;
     // }
-
-    GomukuBoard board;
-
-    GomukuAI ai(5);
-    auto result = ai.findBestMove(board);
-    std::cout << result.first << " " << result.second << std::endl;
-
     return 0;
 }
