@@ -6,6 +6,7 @@
 
 #include "GomukuBoard.hpp"
 #include "PatterMatcher.hpp"
+#include "Pattern20.hpp"
 #include <vector>
 
 class GomukuAI {
@@ -14,8 +15,8 @@ public:
     std::pair<int, int> findBestMove(GomukuBoard& board);
 private:
     int maxDepth;
-    int maximize(GomukuBoard& board, int depth, int alpha, int beta);
-    int minimize(GomukuBoard& board, int depth, int alpha, int beta);
-    int evaluateBoard(const GomukuBoard& board);
+    inline int maximize(GomukuBoard& board, int depth, int alpha, int beta);
+    inline int minimize(GomukuBoard& board, int depth, int alpha, int beta);
+    inline int evaluateBoard(const GomukuBoard& board);
     std::vector<std::pair<PatternMatcher, int>> patternMatchers;
 };
