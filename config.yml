@@ -4,11 +4,11 @@ debug:
 player2:
   limits:
     memory: 70000000
-    time: 5000
+    time: 50000
   exe: pbrain-hikarunogomoku
 player1:
   limits:
-    time: 5000
+    time: 50000
     memory: 70000000
   exe: pbrain-hikarunogomoku
 general:
