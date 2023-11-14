@@ -33,6 +33,7 @@ public:
     void reset();
     void reset(size_t pos);
     bool test(size_t pos) const;
+    std::string to_string() const;
 };
 
 
