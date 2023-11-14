@@ -4,9 +4,11 @@ set(PROJECT_NAME "pbrain-hikarunogomoku")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_BUILD_TYPE Release)
-if (MSVC)
-    set(MAKE_CONFIGURATION_TYPES Release)
+if (NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "" OR CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_BUILD_TYPE Release)
+    if (MSVC)
+        set(MAKE_CONFIGURATION_TYPES Release)
+    endif()
 endif()
 
 project(

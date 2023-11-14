@@ -16,8 +16,6 @@ $(TARGET):
 
 clean:
 	cmake --build build --target clean
-	rm src/Patterns/Pattern20.cpp
-	rm src/Patterns/Pattern20.hpp
 
 fclean: clean
 	echo "Remove the folder 'build' yourself"
