@@ -294,6 +294,17 @@ Protocol::State Protocol::getState()
     return _state;
 }
 
+const Protocol::Position &Protocol::getTurnArguments()
+{
+    return _lastTurnPositions[0];
+}
+
+const std::array<Protocol::Position, ProtocolConfig::MAX_NUMBER_TURN>
+    &Protocol::getBoardArguments()
+{
+    return _lastTurnPositions;
+}
+
 // ---------------------------------------------------------------------------
 // Protocol::Message
 

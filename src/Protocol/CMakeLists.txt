@@ -10,4 +10,5 @@ target_sources(
     ${PROJECT_NAME}
     PRIVATE
     Protocol.cpp
+    ProtocolWrapper.cpp
 )
