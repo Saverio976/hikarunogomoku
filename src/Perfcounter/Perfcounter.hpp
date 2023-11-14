@@ -13,6 +13,7 @@ public:
     enum class PerfType : std::size_t {
         BITSHIFT = 0,
         BITSHIFT2 = 1,
+        EVALUATE_BOARD,
     };
 
     class Counter {
