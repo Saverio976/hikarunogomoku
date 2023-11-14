@@ -5,7 +5,7 @@ pattern
 20 20
 
 data
-O P P P P x x x x x x x x x x x x x x x
+P P P P P x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
@@ -40,4 +40,4 @@ mask
 endmask
 
 score
--8888.0
+-9992.0

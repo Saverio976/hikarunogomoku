@@ -9,8 +9,6 @@
 #include <ostream>
 #include <filesystem>
 
-#define GET_INDEX(d_board_size, d_x, d_y) (((d_board_size - 1 - y) * (d_board_size)) + (d_board_size - 1 - x))
-
 template <std::size_t BOARD_SIZE>
 class Pattern {
 public:
@@ -163,10 +161,11 @@ private:
             while (std::getline(ss, buffer, ' ')) {
                 char c;
                 if (std::istringstream(buffer) >> c) {
+                    int index = y * BOARD_SIZE + x;
                     if (c == 'P') {
-                        dataPlayer.set(GET_INDEX(BOARD_SIZE, x, y));
+                        dataPlayer.set(index);
                     } else if (c == 'O') {
-                        dataOpponent.set(GET_INDEX(BOARD_SIZE, x, y));
+                        dataOpponent.set(index);
                     }
                 }
                 x++;
@@ -191,7 +190,8 @@ private:
             std::size_t x = 0;
             std::size_t y = 0;
             ss >> x >> y;
-            mask.set(GET_INDEX(BOARD_SIZE, x, y));
+            int index = y * BOARD_SIZE + x;
+            mask.set(index);
         }
         return mask;
     }

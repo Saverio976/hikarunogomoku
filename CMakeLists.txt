@@ -19,7 +19,6 @@ add_executable(${PROJECT_NAME})
 
 add_subdirectory(src)
 
-# Copy executable binary of the brain to the root repo
 if (WIN32)
     add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD
@@ -48,9 +47,9 @@ else()
     )
 endif()
 
-add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E remove
-        "${CMAKE_SOURCE_DIR}/src/Patterns/Pattern20.cpp"
-)
+#add_custom_command(
+#        TARGET ${PROJECT_NAME} POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E remove
+#        "${CMAKE_SOURCE_DIR}/src/Patterns/Pattern20.cpp"
+#)
 

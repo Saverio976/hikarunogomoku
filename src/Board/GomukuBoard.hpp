@@ -8,6 +8,7 @@
 #include <array>
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
 
 constexpr int BOARD_SIZE = 20;
 constexpr int BOARD_BITS = BOARD_SIZE * BOARD_SIZE;
@@ -32,5 +33,7 @@ private:
     };
 
     std::unordered_set<std::pair<int, int>, pair_hash> possibleMoves;
+    std::unordered_map<std::pair<int, int>, int, pair_hash> referenceCounts;
+
     void updatePossibleMoves(int x, int y, bool isSet);
 };
