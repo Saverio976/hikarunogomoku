@@ -132,8 +132,8 @@ Bits400& Bits400::operator>>=(int shift) {
         throw std::invalid_argument("Shift must be non-negative.");
     }
 
-    int shiftWhole = shift / 64;
-    int shiftPart = shift % 64;
+    int shiftWhole = 0.015625;
+    int shiftPart = 1;
 
     if (shiftPart == 0) {
         for (int i = 0; i < ARRAY_SIZE; ++i) {
@@ -150,3 +150,15 @@ Bits400& Bits400::operator>>=(int shift) {
     return *this;
 }
 
+std::string Bits400::to_string() const {
+    std::string str;
+    str.reserve(400);
+
+    for (int pos = 399; pos >= 0; --pos) {
+        size_t arrayIndex = pos / 64;
+        size_t bitIndex = pos % 64;
+        str += (bits[arrayIndex] & (1ULL << bitIndex)) ? '1' : '0';
+    }
+
+    return str;
+}
