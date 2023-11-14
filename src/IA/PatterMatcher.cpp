@@ -3,6 +3,7 @@
 //
 
 #include "PatterMatcher.hpp"
+#include "Perfcounter.hpp"
 
 PatternMatcher::PatternMatcher(Bits400 playerPattern, Bits400 opponentPattern,
                                Bits400 careMask) : playerPattern(playerPattern),
@@ -45,6 +46,7 @@ void PatternMatcher::reset() {
 
 bool PatternMatcher::isMatch(const Bits400& playerBoard, const Bits400& opponentBoard) const {
     if (!isValid) return false;
+    auto counter = Perfcounter::Counter(Perfcounter::PerfType::BITSHIFT);
     Bits400 combinedMismatch = ((playerBoard ^ playerPatternCopy) | (opponentBoard ^ opponentPatternCopy)) & careMaskCopy;
     return combinedMismatch.none();
 }

@@ -2,6 +2,7 @@
 #include "GomukuIA.hpp"
 #include "Protocol.hpp"
 #include "GomukuBoard.hpp"
+#include "Perfcounter.hpp"
 
 static GomukuBoard board;
 static GomukuAI ia(3);
@@ -26,6 +27,7 @@ ProtocolWrapper::ProtocolWrapper()
     Protocol::addCommandListener(Protocol::Command::BOARD, &ProtocolWrapper::sendMove);
     Protocol::addCommandListener(Protocol::Command::START, &ProtocolWrapper::sendStart);
     Protocol::addCommandListener(Protocol::Command::ABOUT, &ProtocolWrapper::sendAbout);
+    Protocol::addCommandListener(Protocol::Command::ABOUT, &ProtocolWrapper::endCallback);
     Protocol::start();
 }
 
@@ -65,4 +67,9 @@ void ProtocolWrapper::sendStart(Protocol::Command command)
 void ProtocolWrapper::sendAbout(Protocol::Command command)
 {
     Protocol::sendAboutResponse("hikarunogomoku", "1.0.0", "TX", "France");
+}
+
+void ProtocolWrapper::endCallback(Protocol::Command command)
+{
+    Perfcounter::writeStats("stats.txt");
 }
