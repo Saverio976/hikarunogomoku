@@ -1,5 +1,5 @@
 desciption
-Lose diagonal
+Lose diagonal 1
 
 pattern
 20 20
