@@ -180,9 +180,9 @@ void Protocol::listenAndSendThreaded()
 
     while (isRunning)
     {
+        std::string bufferReceive;
         switch (_state) {
             case State::WAITING_MANAGER_COMMAND:
-                std::string bufferReceive;
                 std::getline(std::cin, bufferReceive);
                 if (bufferReceive == "") {
                     continue;
