@@ -17,7 +17,7 @@ Perfcounter::Counter::Counter(Perfcounter::PerfType type):
 Perfcounter::Counter::~Counter()
 {
     auto now = std::chrono::high_resolution_clock::now();
-    Perfcounter::getCounter(_type).addCount(std::chrono::duration_cast<std::chrono::nanoseconds>(now - _start).count()); 
+    Perfcounter::getCounter(_type).addCount(std::chrono::duration_cast<std::chrono::microseconds>(now - _start).count()); 
 }
 
 Perfcounter::CounterStat::CounterStat()
@@ -47,6 +47,11 @@ std::size_t Perfcounter::CounterStat::getMinCount() const
     return min_count;
 }
 
+std::size_t Perfcounter::CounterStat::getNumSample() const
+{
+    return mean_count_num;
+}
+
 Perfcounter::CounterStat &Perfcounter::getCounter(Perfcounter::PerfType type)
 {
     return Perfcounter::_counters[type];
@@ -57,6 +62,8 @@ static std::string getPerfTypeString(Perfcounter::PerfType type)
     switch (type) {
         case Perfcounter::PerfType::BITSHIFT:
             return "BITSHIFT";
+        case Perfcounter::PerfType::BITSHIFT2:
+            return "BITSHIFT2";
         default:
             return "UNKNOWN-" + std::to_string(static_cast<std::size_t>(type));
     }
@@ -74,6 +81,7 @@ void Perfcounter::writeStats(const std::string &filename)
         file << "--- Mean count: " << it.second.getMeanCount() << std::endl;
         file << "--- Max count: " << it.second.getMaxCount() << std::endl;
         file << "--- Min count: " << it.second.getMinCount() << std::endl;
+        file << "--- Number of samples: " << it.second.getNumSample() << std::endl;
         file << std::endl;
     }
 }

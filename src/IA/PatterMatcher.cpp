@@ -18,6 +18,7 @@ PatternMatcher::PatternMatcher(Bits400 playerPattern, Bits400 opponentPattern,
 }
 
 bool PatternMatcher::advance() {
+    Perfcounter::Counter counter(Perfcounter::PerfType::BITSHIFT2);
     playerPatternCopy >>= 1;
     opponentPatternCopy >>= 1;
     careMaskCopy >>= 1;

@@ -4,12 +4,15 @@
 #include <cmath>
 #include <cstddef>
 #include <map>
+#include <cmath>
+#include <string>
 #include <unordered_map>
 
 class Perfcounter {
 public:
     enum class PerfType : std::size_t {
         BITSHIFT = 0,
+        BITSHIFT2 = 1,
     };
 
     class Counter {
@@ -30,12 +33,13 @@ public:
         std::double_t getMeanCount() const;
         std::size_t getMaxCount() const;
         std::size_t getMinCount() const;
+        std::size_t getNumSample() const;
 
     private:
         std::size_t mean_count_add = 0;
         std::size_t mean_count_num = 0;
         std::size_t max_count = 0;
-        std::size_t min_count = 0;
+        std::size_t min_count = 999999;
     };
 
     static CounterStat &getCounter(PerfType type);
