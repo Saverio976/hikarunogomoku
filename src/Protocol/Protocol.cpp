@@ -256,6 +256,7 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
         _state = State::END;
         _inputOutputMutex.unlock();
         _commandListeners[static_cast<std::size_t>(Command::END)](Command::END);
+        return;
     } else {
         sendUnknown(ErrorUnknownCommand + bufferReceive);
         return;
