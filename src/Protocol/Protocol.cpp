@@ -182,7 +182,7 @@ void Protocol::listenAndSendThreaded()
     {
         switch (_state) {
             case State::WAITING_MANAGER_COMMAND:
-                static std::string bufferReceive;
+                std::string bufferReceive;
                 std::getline(std::cin, bufferReceive);
                 if (bufferReceive == "") {
                     continue;
