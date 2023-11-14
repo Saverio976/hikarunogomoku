@@ -49,9 +49,9 @@ else()
     )
 endif()
 
-#add_custom_command(
-#        TARGET ${PROJECT_NAME} POST_BUILD
-#        COMMAND ${CMAKE_COMMAND} -E remove
-#        "${CMAKE_SOURCE_DIR}/src/Patterns/Pattern20.cpp"
-#)
+add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E remove
+        "${CMAKE_SOURCE_DIR}/src/Patterns/Pattern20.cpp"
+)
 

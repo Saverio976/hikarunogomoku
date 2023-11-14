@@ -5,6 +5,7 @@
 #include "GomukuIA.hpp"
 #include "Perfcounter.hpp"
 #include <climits>
+#include <random>
 
 GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
     for (auto& patterns : Pattern20::getPatterns()) {
@@ -75,14 +76,15 @@ inline int GomukuAI::minimize(GomukuBoard& board, int depth, int alpha, int beta
 
 
 std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
-    int bestValue = true ? INT_MIN : INT_MAX;
+    int bestValue = INT_MIN;
     std::pair<int, int> bestMove = {-1, -1};
 
     auto possibleMoves = board.getPossibleMoves();
 
     for (auto &[x, y] : possibleMoves) {
         board.set(x, y, true);
-        int moveValue = maximize(board, 0, INT_MIN, INT_MAX);
+        int moveValue = minimize(board, 1, INT_MIN, INT_MAX);
+        std::cout << "Move: " << x << " " << y << " Value: " << moveValue << std::endl;
         board.reset(x, y);
         if (moveValue > bestValue) {
             bestMove = {x, y};

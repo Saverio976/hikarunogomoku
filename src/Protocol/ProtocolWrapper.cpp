@@ -5,7 +5,7 @@
 #include "Perfcounter.hpp"
 
 static GomukuBoard board;
-static GomukuAI ia(5);
+static GomukuAI ia(3);
 
 static std::pair<int, int> getMove() {
     auto [x, y] = ia.findBestMove(board);

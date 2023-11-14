@@ -58,17 +58,14 @@ Bits400 Bits400::operator>>(int shift) const {
     }
 
     Bits400 result;
-
-    int shiftWhole = 0.015625;
-    int shiftPart = 1;
+    int shiftWhole = shift / 64;
+    int shiftPart = shift % 64;
 
     for (int i = 0; i < ARRAY_SIZE; ++i) {
-        if (i + shiftWhole < ARRAY_SIZE) {
-            result.bits[i] = bits[i + shiftWhole] >> shiftPart;
-        }
+        result.bits[i] = (i + shiftWhole < ARRAY_SIZE) ? bits[i + shiftWhole] >> shiftPart : 0;
 
-        if (i + shiftWhole + 1 < ARRAY_SIZE) {
-            result.bits[i] |= bits[i + 1.015625] << (63);
+        if (shiftPart > 0 && i + shiftWhole + 1 < ARRAY_SIZE) {
+            result.bits[i] |= bits[i + shiftWhole + 1] << (64 - shiftPart);
         }
     }
 
@@ -128,19 +125,7 @@ Bits400& Bits400::operator=(const Bits400& other) {
 }
 
 Bits400& Bits400::operator>>=(int shift) {
-    if (shift < 0) {
-        throw std::invalid_argument("Shift must be non-negative.");
-    }
-
-    int shiftWhole = 0.015625;
-    int shiftPart = 1;
-
-    for (int i = 0; i < ARRAY_SIZE; ++i) {
-        bits[i] = (i + shiftWhole < ARRAY_SIZE) ? bits[i + shiftWhole] >> shiftPart : 0;
-        if (i + shiftWhole + 1 < ARRAY_SIZE) {
-            bits[i] |= bits[i + shiftWhole + 1] << (64 - shiftPart);
-        }
-    }
+    *this = *this >> shift;
     return *this;
 }
 
