@@ -54,17 +54,27 @@ void ProtocolWrapper::sendMove(Protocol::Command command)
 
     if (command == Protocol::Command::TURN) {
         auto pos = Protocol::getTurnArguments();
-        posPair = getMove(pos.x, pos.y);
+        {
+            Perfcounter::Counter counter(Perfcounter::PerfType::TIME_ALGO_FULL);
+            posPair = getMove(pos.x, pos.y);
+        }
         Protocol::sendTurnResponse(posPair.first, posPair.second);
         return;
     } else if (command == Protocol::Command::BEGIN) {
-        posPair = getMove();
+        {
+            Perfcounter::Counter counter(Perfcounter::PerfType::TIME_ALGO_FULL);
+            posPair = getMove();
+        }
         Protocol::sendBeginResponse(posPair.first, posPair.second);
         return;
     } else if (command == Protocol::Command::BOARD) {
         auto poss = Protocol::getBoardArguments();
-        posPair = getMove(poss);
+        {
+            Perfcounter::Counter counter(Perfcounter::PerfType::TIME_ALGO_FULL);
+            posPair = getMove(poss);
+        }
         Protocol::sendBeginResponse(posPair.first, posPair.second);
+        return;
     } else {
         Protocol::sendError("Invalid command");
         return;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <climits>
 #include <cmath>
 #include <cstddef>
 #include <map>
@@ -14,6 +15,7 @@ public:
         BITSHIFT = 0,
         BITSHIFT2 = 1,
         EVALUATE_BOARD,
+        TIME_ALGO_FULL,
     };
 
     class Counter {
@@ -40,7 +42,7 @@ public:
         std::size_t mean_count_add = 0;
         std::size_t mean_count_num = 0;
         std::size_t max_count = 0;
-        std::size_t min_count = 999999;
+        std::size_t min_count = UINT_MAX;
     };
 
     static CounterStat &getCounter(PerfType type);

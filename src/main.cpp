@@ -8,6 +8,7 @@ static void signalHandler(int signum)
 {
     isRunning = false;
     signal(SIGINT, SIG_DFL);
+    signal(SIGKILL, SIG_DFL);
 }
 
 int main()
@@ -15,6 +16,7 @@ int main()
     auto proc = ProtocolWrapper();
 
     signal(SIGINT, signalHandler);
+    signal(SIGKILL, signalHandler);
     while (Protocol::getState() != Protocol::State::END && isRunning) {
        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }

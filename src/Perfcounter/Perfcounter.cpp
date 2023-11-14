@@ -66,6 +66,8 @@ static std::string getPerfTypeString(Perfcounter::PerfType type)
             return "BITSHIFT2";
         case Perfcounter::PerfType::EVALUATE_BOARD:
             return "EVALUATE_BOARD";
+        case Perfcounter::PerfType::TIME_ALGO_FULL:
+            return "TIME_ALGO_FULL";
         default:
             return "UNKNOWN-" + std::to_string(static_cast<std::size_t>(type));
     }

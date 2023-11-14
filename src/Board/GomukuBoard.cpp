@@ -28,7 +28,7 @@ bool GomukuBoard::isOccupied(int x, int y) const {
 
 std::vector<std::pair<int, int>> GomukuBoard::getPossibleMoves() const {
     if (isFirstMove()) {
-        return {std::make_pair(0, 0)};
+        return {std::make_pair(10, 10)};
     }
     return std::vector<std::pair<int, int>>(possibleMoves.begin(), possibleMoves.end());
 }
