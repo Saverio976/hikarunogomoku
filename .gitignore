@@ -210,6 +210,8 @@ tags
 /build
 pbrain-hikarunogomoku
 pbrain-hikarunogomoku.exe
+pbrain-gomoku-ai
+pbrain-gomoku-ai.exe
 /.cache
 
 #patterns
@@ -218,3 +220,6 @@ tools/transpattern/transpattern
 tools/transpattern/transpattern.exe
 src/Patterns/Pattern*.cpp
 src/Patterns/Pattern*.hpp
+
+#liskvork
+/logs/*

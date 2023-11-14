@@ -25,7 +25,13 @@ if (WIN32)
         TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         $<TARGET_FILE:${PROJECT_NAME}>
-        ${CMAKE_SOURCE_DIR}/${PROJECT_NAME_CLIENT}.exe
+        ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.exe
+    )
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.exe
+        ${CMAKE_SOURCE_DIR}/pbrain-gomoku-ai.exe
     )
 else()
     add_custom_command(
@@ -33,6 +39,12 @@ else()
         COMMAND ${CMAKE_COMMAND} -E copy
         $<TARGET_FILE:${PROJECT_NAME}>
         ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}
+    )
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}
+        ${CMAKE_SOURCE_DIR}/pbrain-gomoku-ai
     )
 endif()
 

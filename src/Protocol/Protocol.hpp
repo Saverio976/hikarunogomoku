@@ -217,6 +217,8 @@ public:
     // end. You can break the loop because there will be no other stone after.
     static const std::array<Position, ProtocolConfig::MAX_NUMBER_TURN>
         &getBoardArguments();
+    // Get the arguments passed to the `START` Command.
+    static std::size_t getStartArguments();
 
     // Response for the `START` Command.
     static void sendStartResponse(const Message &message);
@@ -298,4 +300,6 @@ private:
     static InternalState _internalState;
 
     static std::thread _thread;
+
+    static std::size_t _mapStartSize;
 };
