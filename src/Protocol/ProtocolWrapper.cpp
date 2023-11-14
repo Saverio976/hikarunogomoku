@@ -19,6 +19,18 @@ static std::pair<int, int> getMove(int x, int y) {
     return {x2, y2};
 }
 
+static std::pair<int, int> getMove(const std::array<Protocol::Position, ProtocolConfig::MAX_NUMBER_TURN> &poss) {
+    for (auto &pos : poss) {
+        if (pos.type == Protocol::Position::Type::NULLPTR) {
+            break;
+        }
+        board.set(pos.x, pos.y, false);
+    }
+    auto [x2, y2] = ia.findBestMove(board);
+    board.set(x2, y2, true);
+    return {x2, y2};
+}
+
 ProtocolWrapper::ProtocolWrapper()
 {
     Protocol::addCommandListener(Protocol::Command::BEGIN, &ProtocolWrapper::sendMove);
@@ -48,8 +60,9 @@ void ProtocolWrapper::sendMove(Protocol::Command command)
         Protocol::sendBeginResponse(posPair.first, posPair.second);
         return;
     } else if (command == Protocol::Command::BOARD) {
-        Protocol::sendError("Invalid command");
-        // TODO:
+        auto poss = Protocol::getBoardArguments();
+        posPair = getMove(poss);
+        Protocol::sendBeginResponse(posPair.first, posPair.second);
     } else {
         Protocol::sendError("Invalid command");
         return;
@@ -58,8 +71,11 @@ void ProtocolWrapper::sendMove(Protocol::Command command)
 
 void ProtocolWrapper::sendStart(Protocol::Command command)
 {
-    Protocol::sendStartResponse(Protocol::Message(Protocol::Status::OK));
-    // TODO:
+    if (Protocol::getStartArguments() != 20) {
+        Protocol::sendStartResponse(Protocol::Message(Protocol::Status::ERROR, "Only 20x20 board"));
+    } else {
+        Protocol::sendStartResponse(Protocol::Message(Protocol::Status::OK));
+    }
 }
 
 void ProtocolWrapper::sendAbout(Protocol::Command command)

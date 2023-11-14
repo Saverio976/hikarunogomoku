@@ -50,6 +50,8 @@ Protocol::InternalState Protocol::_internalState =
 
 std::thread Protocol::_thread;
 
+std::size_t Protocol::_mapStartSize = 0;
+
 void Protocol::start()
 {
     std::thread thread(Protocol::listenAndSendThreaded);
@@ -208,6 +210,11 @@ void Protocol::listenAndSendThreaded()
     }
 }
 
+std::size_t Protocol::getStartArguments()
+{
+    return _mapStartSize;
+}
+
 void Protocol::understandReceiveString(const std::string &bufferReceive)
 {
     bool changeState = true;
@@ -221,6 +228,7 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
             _commandListeners[static_cast<std::size_t>(Command::BOARD)](Command::BOARD);
         }
     } else if (bufferReceive.starts_with("START ")) {
+        _mapStartSize = std::stoul(bufferReceive.substr(6));
         _commandListeners[static_cast<std::size_t>(Command::START)](Command::START);
     } else if (bufferReceive.starts_with("TURN ")) {
         _lastTurnPositions[0] = Protocol::Position::fromString(bufferReceive.substr(5), Protocol::Position::Type::OPPONENT);
@@ -238,6 +246,7 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
         _internalState = InternalState::IN_BOARD_COMMAND;
         changeState = false;
     } else if (bufferReceive.starts_with("INFO ")) {
+        ProtocolInfo::setInfo(bufferReceive.substr(5));
         _commandListeners[static_cast<std::size_t>(Command::INFO)](Command::INFO);
     } else if (bufferReceive.starts_with("ABOUT")) {
         _commandListeners[static_cast<std::size_t>(Command::ABOUT)](Command::ABOUT);
@@ -283,7 +292,7 @@ void Protocol::sendResponses()
     )
 }
 
-void Protocol::defaultListener(Protocol::Command /* unused */)
+void Protocol::defaultListener(Protocol::Command command)
 {
     sendUnknown(ErrorUnknownCommand + "defaultListener");
 }
