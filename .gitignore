@@ -210,6 +210,8 @@ tags
 /build
 pbrain-hikarunogomoku
 pbrain-hikarunogomoku.exe
+pbrain-gomoku-ai
+pbrain-gomoku-ai.exe
 /.cache
 
 #patterns
