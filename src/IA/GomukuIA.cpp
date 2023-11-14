@@ -8,24 +8,38 @@
 #include <random>
 
 GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
-    for (auto& patterns : Pattern20::getPatterns()) {
-        auto matcher = PatternMatcher(patterns.getDataPlayer(), patterns.getDataOpponent(), patterns.getMask());
-        patternMatchers.emplace_back(matcher, patterns.getScore());
+    auto patterns = Pattern20::getPatterns();
+    for (auto& pattern : patterns) {
+        auto matcher = PatternMatcher(pattern.getDataPlayer(), pattern.getDataOpponent(), pattern.getMask());
+        patternMatchers.emplace_back(matcher, pattern.getScore());
     }
 }
 
-inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
+inline int GomukuAI::evaluateBoard(const GomukuBoard &board, bool isPayer) {
     int score = 0;
     Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
 
-    for (int i = 0; i < BOARD_BITS; ++i) {
-        for (auto& patternMatcher : patternMatchers) {
-            if (patternMatcher.first.isMatch(board.player, board.opponent)) {
-                score += patternMatcher.second;
+    if (isPayer) {
+        for (int i = 0; i < BOARD_BITS; ++i) {
+            for (auto& patternMatcher : patternMatchers) {
+                if (patternMatcher.first.isMatch(board.player, board.opponent)) {
+                    score += patternMatcher.second;
+                }
+                patternMatcher.first.advance();
             }
-            patternMatcher.first.advance();
+        }
+    } else {
+        for (int i = 0; i < BOARD_BITS; ++i) {
+            for (auto& patternMatcher : patternMatchers) {
+                if (patternMatcher.first.isMatch(board.opponent, board.player)) {
+                    score += patternMatcher.second;
+                }
+                patternMatcher.first.advance();
+            }
         }
     }
+
+
     for (auto& patternMatcher : patternMatchers) {
         patternMatcher.first.reset();
     }
@@ -55,7 +69,7 @@ inline int GomukuAI::maximize(GomukuBoard& board, int depth, int alpha, int beta
 
 inline int GomukuAI::minimize(GomukuBoard& board, int depth, int alpha, int beta) {
     if (depth == maxDepth) {
-        return evaluateBoard(board);
+        return evaluateBoard(board, false);
     }
 
     int minEval = INT_MAX;

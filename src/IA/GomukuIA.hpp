@@ -17,6 +17,6 @@ private:
     int maxDepth;
     inline int maximize(GomukuBoard& board, int depth, int alpha, int beta);
     inline int minimize(GomukuBoard& board, int depth, int alpha, int beta);
-    inline int evaluateBoard(const GomukuBoard& board);
+    inline int evaluateBoard(const GomukuBoard&, bool isPlayer = true);
     std::vector<std::pair<PatternMatcher, int>> patternMatchers;
 };

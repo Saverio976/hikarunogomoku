@@ -30,9 +30,12 @@ Bits400::Bits400(const std::string& bitString) {
 
 Bits400 Bits400::operator&(const Bits400& other) const {
     Bits400 result;
-    for (int i = 0; i < ARRAY_SIZE; ++i) {
+    for (int i = 0; i < ARRAY_SIZE - 1; ++i) {
         result.bits[i] = this->bits[i] & other.bits[i];
     }
+    uint64_t lastElementMask = (1ULL << (400 % 64)) - 1;
+    result.bits[ARRAY_SIZE - 1] = (this->bits[ARRAY_SIZE - 1] & other.bits[ARRAY_SIZE - 1]) & lastElementMask;
+
     return result;
 }
 
