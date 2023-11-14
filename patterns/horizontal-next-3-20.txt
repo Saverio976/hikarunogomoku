@@ -1,15 +1,15 @@
 desciption
-Win vertical
+Horizontal 3 next
 
 pattern
 20 20
 
 data
-O x x x x x x x x x x x x x x x x x x x
-O x x x x x x x x x x x x x x x x x x x
-O x x x x x x x x x x x x x x x x x x x
-O x x x x x x x x x x x x x x x x x x x
-O x x x x x x x x x x x x x x x x x x x
+P P P x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
@@ -30,14 +30,10 @@ mask
 # x y
 0 0
 # x y
-0 1
+1 0
 # x y
-0 2
-# x y
-0 3
-# x y
-0 4
+2 0
 endmask
 
 score
--8888.0
+20.0

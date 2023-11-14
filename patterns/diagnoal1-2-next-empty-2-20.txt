@@ -1,15 +1,15 @@
 desciption
-Win vertical
+diagonal1 2 next + empty 2
 
 pattern
 20 20
 
 data
-O x x x x x x x x x x x x x x x x x x x
-O x x x x x x x x x x x x x x x x x x x
-O x x x x x x x x x x x x x x x x x x x
-O x x x x x x x x x x x x x x x x x x x
-O x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x P x x x x x x x x x x x x x x x x x x
+x x P x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
+x x x x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
@@ -30,14 +30,12 @@ mask
 # x y
 0 0
 # x y
-0 1
+1 1
 # x y
-0 2
+2 2
 # x y
-0 3
-# x y
-0 4
+3 3
 endmask
 
 score
--8888.0
+30.0
