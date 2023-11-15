@@ -97,7 +97,6 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
     for (auto &[x, y] : possibleMoves) {
         board.set(x, y, true);
         int moveValue = minimize(board, 1, INT_MIN, INT_MAX);
-        std::cout << "Move: " << x << " " << y << " Value: " << moveValue << std::endl;
         board.reset(x, y);
         if (moveValue > bestValue) {
             bestMove = {x, y};
