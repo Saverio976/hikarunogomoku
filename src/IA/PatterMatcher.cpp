@@ -14,8 +14,9 @@ bool PatternMatcher::isMatch(const Bits400& playerBoard, const Bits400& opponent
 {
     if (!_isValid) return false;
     auto counter = Perfcounter::Counter(Perfcounter::PerfType::BITSHIFT);
-
-    return playerBoard.contains(_playerMaskPositionsCpy) && opponentBoard.contains(_opponentMaskPositionsCpy);
+    bool playerContains = playerBoard.contains(_playerMaskPositionsCpy);
+    bool opponentContains = opponentBoard.contains(_opponentMaskPositionsCpy);
+    return playerContains && opponentContains;
 }
 
 bool PatternMatcher::set_increment(std::size_t x, std::size_t y)
@@ -37,5 +38,6 @@ bool PatternMatcher::set_increment(std::size_t x, std::size_t y)
         _opponentMaskPositionsCpy[i].x += x;
         _opponentMaskPositionsCpy[i].y += y;
     }
+    _isValid = true;
     return true;
 }

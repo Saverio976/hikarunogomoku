@@ -27,8 +27,8 @@ public:
         const auto [minX, maxX] = std::minmax_element(_playerMaskPositions.begin(), _playerMaskPositions.end(), [](const Position& a, const Position& b) {
             return a.x < b.x;
         });
-        _maxWidth = maxX->x - minX->x;
-        _maxHeight = maxY->y - minY->y;
+        _maxWidth = maxX->x - minX->x + 1;
+        _maxHeight = maxY->y - minY->y + 1;
     }
 
     bool isMatch(const Bits400& playerBoard, const Bits400& opponentBoard) const;
