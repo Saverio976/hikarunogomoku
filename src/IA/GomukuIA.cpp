@@ -31,7 +31,7 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board, bool isPayer) {
                     }
                 } else {
                     if (patternMatcher.first.isMatch(board.opponent, board.player)) {
-                        score += patternMatcher.second;
+                        score -= patternMatcher.second;
                     }
                 }
             }

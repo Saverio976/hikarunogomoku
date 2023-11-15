@@ -58,7 +58,7 @@ public:
 
         for (std::size_t y = 0; y < BOARD_SIZE; ++y) {
             for (std::size_t x = 0; x < BOARD_SIZE; ++x) {
-                if (other._bits[y][x] == true) {
+                if (other._bits[y][x]) {
                     positions.push_back(Position(x, y, _bits[y][x]));
                 }
             }
@@ -77,4 +77,5 @@ public:
     void reset(std::size_t x, std::size_t y);
     bool test(std::size_t x, std::size_t y) const;
     std::string to_string() const;
+    void print() const;
 };

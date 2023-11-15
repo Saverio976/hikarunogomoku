@@ -41,8 +41,8 @@ bool Bits400::test(std::size_t x, std::size_t y) const {
 
 Bits400& Bits400::operator=(const Bits400& other) {
     if (this != &other) {
-        for (size_t i = 0; i < BOARD_SIZE; ++i) {
-            for (size_t j = 0; j < BOARD_SIZE; ++j) {
+        for (size_t i = 0; i < BOARD_SIZE; i++) {
+            for (size_t j = 0; j < BOARD_SIZE; j++) {
                 _bits[i][j] = other._bits[i][j];
             }
         }
@@ -55,8 +55,8 @@ std::string Bits400::to_string() const
     std::string str;
     str.reserve(400);
 
-    for (std::size_t y = 0; y < BOARD_SIZE; ++y) {
-        for (std::size_t x = 0; x < BOARD_SIZE; ++x) {
+    for (std::size_t y = 0; y < BOARD_SIZE; y++) {
+        for (std::size_t x = 0; x < BOARD_SIZE; x++) {
             if (_bits[y][x]) {
                 str += '1';
             } else {
@@ -69,12 +69,23 @@ std::string Bits400::to_string() const
 
 bool Bits400::contains(const std::vector<Position> &poss) const
 {
-    bool found = true;
-    for (const auto& pos : poss) {
+   for (const auto& pos : poss) {
         if (_bits[pos.y][pos.x] != pos.value) {
-            found = false;
-            break;
+            return false;
         }
     }
-    return found;
+    return true;
+}
+
+void Bits400::print() const {
+    for (std::size_t y = 0; y < BOARD_SIZE; y++) {
+        for (std::size_t x = 0; x < BOARD_SIZE; x++) {
+            if (_bits[y][x]) {
+                std::cout << "1";
+            } else {
+                std::cout << "0";
+            }
+        }
+        std::cout << std::endl;
+    }
 }
