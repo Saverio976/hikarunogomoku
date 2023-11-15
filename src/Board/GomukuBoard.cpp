@@ -10,13 +10,31 @@ void GomukuBoard::set(int x, int y, bool isPlayer) {
     } else {
         opponent.set(x, y);
     }
-    updatePossibleMoves(x, y, true);
+    if (minX > x) minX = x;
+    if (maxX < x) maxX = x;
+    if (minY > y) minY = y;
+    if (maxY < y) maxY = y;
 }
 
 void GomukuBoard::reset(int x, int y) {
     player.reset(x, y);
     opponent.reset(x, y);
-    updatePossibleMoves(x, y, false);
+    if (x == minX || x == maxX || y == minY || y == maxY) {
+        recalculateCorners();
+    }
+}
+
+void GomukuBoard::recalculateCorners() {
+    for (int x = minX; x <= maxX; ++x) {
+        for (int y = minY; y <= maxY; ++y) {
+            if (isOccupied(x, y)) {
+                if (minX > x) minX = x;
+                if (maxX < x) maxX = x;
+                if (minY > y) minY = y;
+                if (maxY < y) maxY = y;
+            }
+        }
+    }
 }
 
 bool GomukuBoard::isOccupied(int x, int y) const {
@@ -30,7 +48,7 @@ std::vector<std::pair<int, int>> GomukuBoard::getPossibleMoves() const {
     // return std::vector<std::pair<int, int>>(possibleMoves.begin(), possibleMoves.end());
     std::vector<std::pair<int, int>> moves;
     if (isFirstMove()) {
-        moves.emplace_back(BOARD_SIZE / 2, BOARD_SIZE / 2);
+        moves.emplace_back(10, 10);
         return moves;
     } else {
         for (int x = 0; x < BOARD_SIZE; ++x) {

@@ -17,15 +17,20 @@ GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
     }
 }
 
-inline int GomukuAI::evaluateBoard(const GomukuBoard &board, bool isPayer) {
+inline int GomukuAI::evaluateBoard(const GomukuBoard &board, bool isPlayer) {
     int score = 0;
     Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
 
-    for (std::size_t y = 0; y < BOARD_SIZE; ++y) {
-        for (std::size_t x = 0; x < BOARD_SIZE; ++x) {
+    int lowerX = std::max(0, board.minX - 1);
+    int lowerY = std::max(0, board.minY - 1);
+    int upperX = std::min(BOARD_SIZE - 1, board.maxX + 1);
+    int upperY = std::min(BOARD_SIZE - 1, board.maxY + 1);
+
+    for (std::size_t y = lowerY; y <= upperY; ++y) {
+        for (std::size_t x = lowerX; x <= upperX; ++x) {
             for (auto& patternMatcher : patternMatchers) {
                 patternMatcher.first.set_increment(x, y);
-                if (isPayer) {
+                if (isPlayer) {
                     if (patternMatcher.first.isMatch(board.player, board.opponent)) {
                         score += patternMatcher.second;
                     }
