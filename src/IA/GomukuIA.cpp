@@ -3,8 +3,10 @@
 //
 
 #include "GomukuIA.hpp"
+#include "GomukuBoard.hpp"
 #include "Perfcounter.hpp"
 #include <climits>
+#include <cstddef>
 #include <random>
 
 GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
@@ -19,29 +21,21 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board, bool isPayer) {
     int score = 0;
     Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
 
-    if (isPayer) {
-        for (int i = 0; i < BOARD_BITS; ++i) {
+    for (std::size_t y = 0; y < BOARD_SIZE; ++y) {
+        for (std::size_t x = 0; x < BOARD_SIZE; ++x) {
             for (auto& patternMatcher : patternMatchers) {
-                if (patternMatcher.first.isMatch(board.player, board.opponent)) {
-                    score += patternMatcher.second;
+                patternMatcher.first.set_increment(x, y);
+                if (isPayer) {
+                    if (patternMatcher.first.isMatch(board.player, board.opponent)) {
+                        score += patternMatcher.second;
+                    }
+                } else {
+                    if (patternMatcher.first.isMatch(board.opponent, board.player)) {
+                        score += patternMatcher.second;
+                    }
                 }
-                patternMatcher.first.advance();
             }
         }
-    } else {
-        for (int i = 0; i < BOARD_BITS; ++i) {
-            for (auto& patternMatcher : patternMatchers) {
-                if (patternMatcher.first.isMatch(board.opponent, board.player)) {
-                    score += patternMatcher.second;
-                }
-                patternMatcher.first.advance();
-            }
-        }
-    }
-
-
-    for (auto& patternMatcher : patternMatchers) {
-        patternMatcher.first.reset();
     }
     return score;
 }

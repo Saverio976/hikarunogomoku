@@ -161,11 +161,10 @@ private:
             while (std::getline(ss, buffer, ' ')) {
                 char c;
                 if (std::istringstream(buffer) >> c) {
-                    int index = y * BOARD_SIZE + x;
                     if (c == 'P') {
-                        dataPlayer.set(index);
+                        dataPlayer.set(x, y);
                     } else if (c == 'O') {
-                        dataOpponent.set(index);
+                        dataOpponent.set(x, y);
                     }
                 }
                 x++;
@@ -190,8 +189,7 @@ private:
             std::size_t x = 0;
             std::size_t y = 0;
             ss >> x >> y;
-            int index = y * BOARD_SIZE + x;
-            mask.set(index);
+            mask.set(x, y);
         }
         return mask;
     }
