@@ -22,7 +22,12 @@ public:
     void reset(int x, int y);
     bool isOccupied(int x, int y) const;
     std::vector<std::pair<int, int>> getPossibleMoves() const;
-    int minX, minY, maxX, maxY;
+
+    int getMinX() const;
+    int getMaxX() const;
+    int getMinY() const;
+    int getMaxY() const;
+
 private:
     bool isFirstMove() const;
     bool isAdjacentToOccupied(int x, int y) const;
@@ -36,6 +41,10 @@ private:
     std::unordered_set<std::pair<int, int>, pair_hash> possibleMoves;
     std::unordered_map<std::pair<int, int>, int, pair_hash> referenceCounts;
 
-    void updatePossibleMoves(int x, int y, bool isSet);
     void recalculateCorners();
+
+    int _minX;
+    int _minY;
+    int _maxX;
+    int _maxY;
 };

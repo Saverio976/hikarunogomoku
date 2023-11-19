@@ -21,10 +21,10 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board, bool isPlayer) {
     int score = 0;
     Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
 
-    int lowerX = std::max(0, board.minX - 1);
-    int lowerY = std::max(0, board.minY - 1);
-    int upperX = std::min(BOARD_SIZE - 1, board.maxX + 1);
-    int upperY = std::min(BOARD_SIZE - 1, board.maxY + 1);
+    int lowerX = std::max(0, board.getMinX() - 1);
+    int lowerY = std::max(0, board.getMinY() - 1);
+    int upperX = std::min(BOARD_SIZE - 1, board.getMaxX() + 1);
+    int upperY = std::min(BOARD_SIZE - 1, board.getMaxY() + 1);
 
     for (std::size_t y = lowerY; y <= upperY; ++y) {
         for (std::size_t x = lowerX; x <= upperX; ++x) {
@@ -97,7 +97,7 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
     for (auto &[x, y] : possibleMoves) {
         board.set(x, y, true);
         int moveValue = minimize(board, 1, INT_MIN, INT_MAX);
-        std::cout << "Move: " << x << " " << y << " Value: " << moveValue << std::endl;
+        // std::cout << "Move: " << x << " " << y << " Value: " << moveValue << std::endl;
         board.reset(x, y);
         if (moveValue > bestValue) {
             bestMove = {x, y};
