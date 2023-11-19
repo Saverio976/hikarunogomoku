@@ -5,33 +5,54 @@
 #include "GomukuBoard.hpp"
 
 void GomukuBoard::set(int x, int y, bool isPlayer) {
-    int invertedIndex = (BOARD_SIZE - 1 - y) * BOARD_SIZE + (BOARD_SIZE - 1 - x);
     if (isPlayer) {
-        player.set(invertedIndex);
+        player.set(x, y);
     } else {
-        opponent.set(invertedIndex);
+        opponent.set(x, y);
     }
+    if (_minX > x) _minX = x;
+    if (_maxX < x) _maxX = x;
+    if (_minY > y) _minY = y;
+    if (_maxY < y) _maxY = y;
 }
 
 void GomukuBoard::reset(int x, int y) {
-    int invertedIndex = (BOARD_SIZE - 1 - y) * BOARD_SIZE + (BOARD_SIZE - 1 - x);
-    player.reset(invertedIndex);
-    opponent.reset(invertedIndex);
+    player.reset(x, y);
+    opponent.reset(x, y);
+    if (x == _minX || x == _maxX || y == _minY || y == _maxY) {
+        recalculateCorners();
+    }
+}
+
+void GomukuBoard::recalculateCorners() {
+    for (int x = _minX; x <= _maxX; ++x) {
+        for (int y = _minY; y <= _maxY; ++y) {
+            if (isOccupied(x, y)) {
+                if (_minX > x) _minX = x;
+                if (_maxX < x) _maxX = x;
+                if (_minY > y) _minY = y;
+                if (_maxY < y) _maxY = y;
+            }
+        }
+    }
 }
 
 bool GomukuBoard::isOccupied(int x, int y) const {
-    int invertedIndex = (BOARD_SIZE - 1 - y) * BOARD_SIZE + (BOARD_SIZE - 1 - x);
-    return player.test(invertedIndex) || opponent.test(invertedIndex);
+    return player.test(x, y) || opponent.test(x, y);
 }
 
 std::vector<std::pair<int, int>> GomukuBoard::getPossibleMoves() const {
+    // if (isFirstMove()) {
+    //     return {std::make_pair(10, 10)};
+    // }
+    // return std::vector<std::pair<int, int>>(possibleMoves.begin(), possibleMoves.end());
     std::vector<std::pair<int, int>> moves;
     if (isFirstMove()) {
-        moves.emplace_back(BOARD_SIZE / 2, BOARD_SIZE / 2);
+        moves.emplace_back(10, 10);
         return moves;
     } else {
-        for (int x = 0; x < BOARD_SIZE; ++x) {
-            for (int y = 0; y < BOARD_SIZE; ++y) {
+        for (int x = _minX; x <= _maxX; ++x) {
+            for (int y = _minY; y <= _maxY; ++y) {
                 if (!isOccupied(x, y) && isAdjacentToOccupied(x, y)) {
                     moves.emplace_back(x, y);
                 }
@@ -59,4 +80,20 @@ bool GomukuBoard::isAdjacentToOccupied(int x, int y) const {
         }
     }
     return false;
+}
+
+int GomukuBoard::getMinX() const {
+    return _minX;
+}
+
+int GomukuBoard::getMaxX() const {
+    return _maxX;
+}
+
+int GomukuBoard::getMinY() const {
+    return _minY;
+}
+
+int GomukuBoard::getMaxY() const {
+    return _maxY;
 }

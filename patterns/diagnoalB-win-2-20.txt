@@ -1,13 +1,13 @@
 desciption
-Win horizontal
+diagnoalB win - 2
 
 pattern
 20 20
 
 data
-O P P P P x x x x x x x x x x x x x x x
-x x x x x x x x x x x x x x x x x x x x
-x x x x x x x x x x x x x x x x x x x x
+P x x x x x x x x x x x x x x x x x x x
+x P x x x x x x x x x x x x x x x x x x
+x x P x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
 x x x x x x x x x x x x x x x x x x x x
@@ -30,14 +30,14 @@ mask
 # x y
 0 0
 # x y
-1 0
+1 1
 # x y
-2 0
+2 2
 # x y
-3 0
+3 3
 # x y
-4 0
+4 4
 endmask
 
 score
--9999.0
+100.0

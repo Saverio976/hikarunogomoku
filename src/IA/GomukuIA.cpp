@@ -3,28 +3,44 @@
 //
 
 #include "GomukuIA.hpp"
+#include "GomukuBoard.hpp"
+#include "Perfcounter.hpp"
 #include <climits>
+#include <cstddef>
+#include <random>
 
 GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
-    for (auto& patterns : Pattern20::getPatterns()) {
-        auto matcher = PatternMatcher(patterns.getDataPlayer(), patterns.getDataOpponent(), patterns.getMask());
-        patternMatchers.emplace_back(matcher, patterns.getScore());
+    auto patterns = Pattern20::getPatterns();
+    for (auto& pattern : patterns) {
+        auto matcher = PatternMatcher(pattern.getDataPlayer(), pattern.getDataOpponent(), pattern.getMask());
+        patternMatchers.emplace_back(matcher, pattern.getScore());
     }
 }
 
-inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
+inline int GomukuAI::evaluateBoard(const GomukuBoard &board, bool isPlayer) {
     int score = 0;
+    Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
 
-    for (int i = 0; i < BOARD_BITS; ++i) {
-        for (auto& patternMatcher : patternMatchers) {
-            if (patternMatcher.first.isMatch(board.player, board.opponent)) {
-                score += patternMatcher.second;
+    int lowerX = std::max(0, board.getMinX() - 1);
+    int lowerY = std::max(0, board.getMinY() - 1);
+    int upperX = std::min(BOARD_SIZE - 1, board.getMaxX() + 1);
+    int upperY = std::min(BOARD_SIZE - 1, board.getMaxY() + 1);
+
+    for (std::size_t y = lowerY; y <= upperY; ++y) {
+        for (std::size_t x = lowerX; x <= upperX; ++x) {
+            for (auto& patternMatcher : patternMatchers) {
+                patternMatcher.first.set_increment(x, y);
+                if (isPlayer) {
+                    if (patternMatcher.first.isMatch(board.player, board.opponent)) {
+                        score += patternMatcher.second;
+                    }
+                } else {
+                    if (patternMatcher.first.isMatch(board.opponent, board.player)) {
+                        score -= patternMatcher.second;
+                    }
+                }
             }
-            patternMatcher.first.advance();
         }
-    }
-    for (auto& patternMatcher : patternMatchers) {
-        patternMatcher.first.reset();
     }
     return score;
 }
@@ -52,7 +68,7 @@ inline int GomukuAI::maximize(GomukuBoard& board, int depth, int alpha, int beta
 
 inline int GomukuAI::minimize(GomukuBoard& board, int depth, int alpha, int beta) {
     if (depth == maxDepth) {
-        return evaluateBoard(board);
+        return evaluateBoard(board, false);
     }
 
     int minEval = INT_MAX;
@@ -73,14 +89,15 @@ inline int GomukuAI::minimize(GomukuBoard& board, int depth, int alpha, int beta
 
 
 std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
-    int bestValue = true ? INT_MIN : INT_MAX;
+    int bestValue = INT_MIN;
     std::pair<int, int> bestMove = {-1, -1};
 
     auto possibleMoves = board.getPossibleMoves();
 
     for (auto &[x, y] : possibleMoves) {
         board.set(x, y, true);
-        int moveValue = maximize(board, 0, INT_MIN, INT_MAX);
+        int moveValue = minimize(board, 1, INT_MIN, INT_MAX);
+        // std::cout << "Move: " << x << " " << y << " Value: " << moveValue << std::endl;
         board.reset(x, y);
         if (moveValue > bestValue) {
             bestMove = {x, y};

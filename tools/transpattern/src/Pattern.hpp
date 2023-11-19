@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bitset>
+#include "Bits.hpp"
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -8,8 +8,6 @@
 #include <sstream>
 #include <ostream>
 #include <filesystem>
-
-#define GET_INDEX(d_board_size, d_x, d_y) (((d_board_size - 1 - y) * (d_board_size)) + (d_board_size - 1 - x))
 
 template <std::size_t BOARD_SIZE>
 class Pattern {
@@ -58,7 +56,7 @@ public:
 
         def += "#pragma once\n";
         def += "\n";
-        def += "#include <bitset>\n";
+        def += "#include \"Bits.hpp\"\n";
         def += "#include <string>\n";
         def += "#include <cstddef>\n";
         def += "#include <vector>\n";
@@ -69,9 +67,9 @@ public:
         def += "\n";
         def += "    std::size_t getSizeX() const { return _sizeX; };\n";
         def += "    std::size_t getSizeY() const { return _sizeY; };\n";
-        def += "    const std::bitset<" + std::to_string(BOARD_SIZE * BOARD_SIZE) + "> &getDataPlayer() const { return _dataPlayer; };\n";
-        def += "    const std::bitset<" + std::to_string(BOARD_SIZE * BOARD_SIZE) + "> &getDataOpponent() const { return _dataOpponent; };\n";
-        def += "    const std::bitset<" + std::to_string(BOARD_SIZE * BOARD_SIZE) + "> &getMask() const { return _mask; };\n";
+        def += "    const Bits400 &getDataPlayer() const { return _dataPlayer; };\n";
+        def += "    const Bits400 &getDataOpponent() const { return _dataOpponent; };\n";
+        def += "    const Bits400 &getMask() const { return _mask; };\n";
         def += "    const std::string &getDescription() const { return _description; };\n";
         def += "    float getScore() const { return _score; };\n";
         def += "\n";
@@ -80,9 +78,9 @@ public:
         def += "\n";
         def += "    std::size_t _sizeX;\n";
         def += "    std::size_t _sizeY;\n";
-        def += "    std::bitset<" + std::to_string(BOARD_SIZE * BOARD_SIZE) + "> _dataPlayer;\n";
-        def += "    std::bitset<" + std::to_string(BOARD_SIZE * BOARD_SIZE) + "> _dataOpponent;\n";
-        def += "    std::bitset<" + std::to_string(BOARD_SIZE * BOARD_SIZE) + "> _mask;\n";
+        def += "    Bits400 _dataPlayer;\n";
+        def += "    Bits400 _dataOpponent;\n";
+        def += "    Bits400 _mask;\n";
         def += "    std::string _description;\n";
         def += "    float _score;\n";
         def += "};\n";
@@ -148,10 +146,10 @@ private:
         return std::make_pair(sizeX, sizeY);
     }
 
-    static std::pair<std::bitset<BOARD_SIZE * BOARD_SIZE>, std::bitset<BOARD_SIZE * BOARD_SIZE>> getPatternData(std::ifstream &file)
+    static std::pair<Bits400, Bits400> getPatternData(std::ifstream &file)
     {
-        std::bitset<BOARD_SIZE * BOARD_SIZE> dataPlayer;
-        std::bitset<BOARD_SIZE * BOARD_SIZE> dataOpponent;
+        Bits400 dataPlayer;
+        Bits400 dataOpponent;
 
         for (std::size_t y = 0; y < BOARD_SIZE; y++) {
             std::string bufferLine;
@@ -164,9 +162,9 @@ private:
                 char c;
                 if (std::istringstream(buffer) >> c) {
                     if (c == 'P') {
-                        dataPlayer.set(GET_INDEX(BOARD_SIZE, x, y));
+                        dataPlayer.set(x, y);
                     } else if (c == 'O') {
-                        dataOpponent.set(GET_INDEX(BOARD_SIZE, x, y));
+                        dataOpponent.set(x, y);
                     }
                 }
                 x++;
@@ -175,9 +173,9 @@ private:
         return std::make_pair(dataPlayer, dataOpponent);
     }
 
-    static std::bitset<BOARD_SIZE * BOARD_SIZE> getMask(std::ifstream &file)
+    static Bits400 getMask(std::ifstream &file)
     {
-        std::bitset<BOARD_SIZE * BOARD_SIZE> mask;
+        Bits400 mask;
         std::string buffer;
 
         while (std::getline(file, buffer)) {
@@ -191,7 +189,7 @@ private:
             std::size_t x = 0;
             std::size_t y = 0;
             ss >> x >> y;
-            mask.set(GET_INDEX(BOARD_SIZE, x, y));
+            mask.set(x, y);
         }
         return mask;
     }
@@ -208,9 +206,9 @@ private:
 
     std::size_t sizeX;
     std::size_t sizeY;
-    std::bitset<BOARD_SIZE * BOARD_SIZE> dataPlayer;
-    std::bitset<BOARD_SIZE * BOARD_SIZE> dataOpponent;
-    std::bitset<BOARD_SIZE * BOARD_SIZE> mask;
+    Bits400 dataPlayer;
+    Bits400 dataOpponent;
+    Bits400 mask;
     std::string description;
     float score;
 };

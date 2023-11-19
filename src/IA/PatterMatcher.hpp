@@ -4,34 +4,44 @@
 
 #pragma once
 
-#include <bitset>
+#include "Bits.hpp"
+#include <algorithm>
+#include <cstddef>
 #include <fstream>
 #include <string>
 #include <iostream>
+#include <vector>
 #include "GomukuBoard.hpp"
 
 class PatternMatcher {
 public:
-    PatternMatcher(std::bitset<BOARD_BITS> playerPattern, std::bitset<BOARD_BITS> opponentPattern, std::bitset<BOARD_BITS> careMask);
-    bool advance();
-    void reset();
-    bool isMatch(const std::bitset<BOARD_BITS>& playerBoard, const std::bitset<BOARD_BITS>& opponentBoard) const;
+    constexpr PatternMatcher(Bits400 playerPattern, Bits400 opponentPattern, Bits400 careMask)
+    {
+        _playerMaskPositions = playerPattern & careMask;
+        _opponentMaskPositions = opponentPattern & careMask;
+        _playerMaskPositionsCpy = _playerMaskPositions;
+        _opponentMaskPositionsCpy = _opponentMaskPositions;
+        const auto [minY, maxY] = std::minmax_element(_playerMaskPositions.begin(), _playerMaskPositions.end(), [](const Position& a, const Position& b) {
+            return a.y < b.y;
+        });
+        const auto [minX, maxX] = std::minmax_element(_playerMaskPositions.begin(), _playerMaskPositions.end(), [](const Position& a, const Position& b) {
+            return a.x < b.x;
+        });
+        _maxWidth = maxX->x - minX->x + 1;
+        _maxHeight = maxY->y - minY->y + 1;
+    }
+
+    bool isMatch(const Bits400& playerBoard, const Bits400& opponentBoard) const;
+    bool set_increment(std::size_t x, std::size_t y);
+
 private:
-    int patterHeight = 0;
-    int patternWidth = 0;
-    int shiftIndex = 0;
-    int currentRow = 0;
-    int currentColumn = 0;
-    bool isValid = true;
-    int getPatternHeight() const;
-    int getPatternWidth() const;
-
+    bool _isValid = true;
     // Patterns
-    std::bitset<BOARD_BITS> playerPattern;
-    std::bitset<BOARD_BITS> opponentPattern;
-    std::bitset<BOARD_BITS> careMask;
+    std::vector<Position> _playerMaskPositions;
+    std::vector<Position> _playerMaskPositionsCpy;
+    std::vector<Position> _opponentMaskPositions;
+    std::vector<Position> _opponentMaskPositionsCpy;
 
-    std::bitset<BOARD_BITS> playerPatternCopy;
-    std::bitset<BOARD_BITS> opponentPatternCopy;
-    std::bitset<BOARD_BITS> careMaskCopy;
+    std::size_t _maxWidth = 0;
+    std::size_t _maxHeight = 0;
 };

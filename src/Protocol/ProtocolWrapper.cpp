@@ -2,6 +2,7 @@
 #include "GomukuIA.hpp"
 #include "Protocol.hpp"
 #include "GomukuBoard.hpp"
+#include "Perfcounter.hpp"
 
 static GomukuBoard board;
 static GomukuAI ia(3);
@@ -38,6 +39,7 @@ ProtocolWrapper::ProtocolWrapper()
     Protocol::addCommandListener(Protocol::Command::BOARD, &ProtocolWrapper::sendMove);
     Protocol::addCommandListener(Protocol::Command::START, &ProtocolWrapper::sendStart);
     Protocol::addCommandListener(Protocol::Command::ABOUT, &ProtocolWrapper::sendAbout);
+    Protocol::addCommandListener(Protocol::Command::END, &ProtocolWrapper::endCallback);
     Protocol::start();
 }
 
@@ -52,17 +54,27 @@ void ProtocolWrapper::sendMove(Protocol::Command command)
 
     if (command == Protocol::Command::TURN) {
         auto pos = Protocol::getTurnArguments();
-        posPair = getMove(pos.x, pos.y);
+        {
+            Perfcounter::Counter counter(Perfcounter::PerfType::TIME_ALGO_FULL);
+            posPair = getMove(pos.x, pos.y);
+        }
         Protocol::sendTurnResponse(posPair.first, posPair.second);
         return;
     } else if (command == Protocol::Command::BEGIN) {
-        posPair = getMove();
+        {
+            Perfcounter::Counter counter(Perfcounter::PerfType::TIME_ALGO_FULL);
+            posPair = getMove();
+        }
         Protocol::sendBeginResponse(posPair.first, posPair.second);
         return;
     } else if (command == Protocol::Command::BOARD) {
         auto poss = Protocol::getBoardArguments();
-        posPair = getMove(poss);
+        {
+            Perfcounter::Counter counter(Perfcounter::PerfType::TIME_ALGO_FULL);
+            posPair = getMove(poss);
+        }
         Protocol::sendBeginResponse(posPair.first, posPair.second);
+        return;
     } else {
         Protocol::sendError("Invalid command");
         return;
@@ -81,4 +93,9 @@ void ProtocolWrapper::sendStart(Protocol::Command command)
 void ProtocolWrapper::sendAbout(Protocol::Command command)
 {
     Protocol::sendAboutResponse("hikarunogomoku", "1.0.0", "TX", "France");
+}
+
+void ProtocolWrapper::endCallback(Protocol::Command command)
+{
+    Perfcounter::writeStats("stats.txt");
 }

@@ -4,23 +4,47 @@
 
 #pragma once
 
-#include <bitset>
+#include "Bits.hpp"
 #include <array>
 #include <vector>
+#include <unordered_set>
+#include <unordered_map>
 
 constexpr int BOARD_SIZE = 20;
 constexpr int BOARD_BITS = BOARD_SIZE * BOARD_SIZE;
 
 class GomukuBoard {
 public:
-    std::bitset<BOARD_BITS> player;
-    std::bitset<BOARD_BITS> opponent;
+    Bits400 player;
+    Bits400 opponent;
 
     void set(int x, int y, bool isPlayer);
     void reset(int x, int y);
     bool isOccupied(int x, int y) const;
     std::vector<std::pair<int, int>> getPossibleMoves() const;
+
+    int getMinX() const;
+    int getMaxX() const;
+    int getMinY() const;
+    int getMaxY() const;
+
 private:
     bool isFirstMove() const;
     bool isAdjacentToOccupied(int x, int y) const;
+
+    struct pair_hash {
+        inline std::size_t operator()(const std::pair<int, int> &v) const {
+            return v.first * 31 + v.second;
+        }
+    };
+
+    std::unordered_set<std::pair<int, int>, pair_hash> possibleMoves;
+    std::unordered_map<std::pair<int, int>, int, pair_hash> referenceCounts;
+
+    void recalculateCorners();
+
+    int _minX;
+    int _minY;
+    int _maxX;
+    int _maxY;
 };
