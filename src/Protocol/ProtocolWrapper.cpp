@@ -25,7 +25,7 @@ static std::pair<int, int> getMove(const std::array<Protocol::Position, Protocol
         if (pos.type == Protocol::Position::Type::NULLPTR) {
             break;
         }
-        board.set(pos.x, pos.y, false);
+        board.set(pos.x, pos.y, pos.type == Protocol::Position::Type::ME);
     }
     auto [x2, y2] = ia.findBestMove(board);
     board.set(x2, y2, true);

@@ -6,7 +6,6 @@
 
 #include "GomukuBoard.hpp"
 #include "PatterMatcher.hpp"
-#include "Pattern20.hpp"
 #include <vector>
 #include <utility>
 #include <cmath>
