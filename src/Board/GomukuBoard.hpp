@@ -25,6 +25,8 @@ public:
     bool isOccupied(int x, int y) const;
     std::vector<std::pair<int, int>> getPossibleMoves() const;
 
+    bool isGameOver() const;
+
     int getMinX() const;
     int getMaxX() const;
     int getMinY() const;
@@ -45,7 +47,6 @@ private:
 
     void recalculateCorners();
 
-    bool isGameOver() const;
 
     bool hasFiveInARow(const Bits400& bits) const;
 
