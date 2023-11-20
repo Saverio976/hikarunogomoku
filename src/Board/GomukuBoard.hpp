@@ -9,8 +9,6 @@
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
-#include <random>
-#include <algorithm>
 
 constexpr int BOARD_SIZE = 20;
 constexpr int BOARD_BITS = BOARD_SIZE * BOARD_SIZE;
