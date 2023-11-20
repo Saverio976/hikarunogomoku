@@ -15,11 +15,12 @@
 struct ScoreKey {
     int alignedStones;
     int openEnds;
+    int gaps;
 
-    ScoreKey(int aligned, int open) : alignedStones(aligned), openEnds(open) {}
+    ScoreKey(int aligned, int open, int gapsCount) : alignedStones(aligned), openEnds(open), gaps(gapsCount) {}
 
     bool operator==(const ScoreKey& other) const {
-        return alignedStones == other.alignedStones && openEnds == other.openEnds;
+        return alignedStones == other.alignedStones && openEnds == other.openEnds && gaps == other.gaps;
     }
 };
 
@@ -29,10 +30,12 @@ namespace std {
         size_t operator()(const ScoreKey& k) const {
             size_t h1 = std::hash<int>()(k.alignedStones);
             size_t h2 = std::hash<int>()(k.openEnds);
-            return h1 ^ (h2 << 1);
+            size_t h3 = std::hash<int>()(k.gaps);
+            return h1 ^ ((h2 << 1) | (h3 << 2));
         }
     };
 }
+
 
 class GomukuAI {
 public:

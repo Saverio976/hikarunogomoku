@@ -7,23 +7,29 @@
 #include "Perfcounter.hpp"
 
 GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
-    scoreLookupTab[ScoreKey(5, 2)] = 10000000;
-    scoreLookupTab[ScoreKey(5, 1)] = 10000000;
-    scoreLookupTab[ScoreKey(5, 0)] = 10000000;
+    scoreLookupTab[ScoreKey(5, 2, 0)] = 10000000; // 5 in a row with 2 open ends and 0 gaps is a win.
+    scoreLookupTab[ScoreKey(5, 1, 0)] = 10000000; // 5 in a row with 1 open end and 0 gaps is a win.
+    scoreLookupTab[ScoreKey(5, 0, 0)] = 10000000; // 5 in a row with 0 open ends and 0 gaps is a win.
 
-    scoreLookupTab[ScoreKey(4, 2)] = 90000000;
-    scoreLookupTab[ScoreKey(4, 1)] = 80000000;
-    scoreLookupTab[ScoreKey(4, 0)] = 200000;
+    scoreLookupTab[ScoreKey(4, 2, 0)] = 90000000; // 4 in a row with 2 open ends and 0 gaps is very strong.
+    scoreLookupTab[ScoreKey(4, 1, 0)] = 80000000; // 4 in a row with 1 open end and 0 gaps is strong.
+    scoreLookupTab[ScoreKey(4, 0, 0)] = 200000;   // 4 in a row with 0 open ends and 0 gaps is weaker.
+    scoreLookupTab[ScoreKey(4, 1, 1)] = 100000;   // 4 in a row with 1 open end and 1 gap is less strong.
+    scoreLookupTab[ScoreKey(4, 0, 1)] = 50000;    // 4 in a row with 0 open ends and 1 gap is even weaker.
 
-    scoreLookupTab[ScoreKey(3, 2)] = 500000;
-    scoreLookupTab[ScoreKey(3, 1)] = 400000;
-    scoreLookupTab[ScoreKey(3, 0)] = 100000;
+    scoreLookupTab[ScoreKey(3, 2, 0)] = 500000;   // 3 in a row with 2 open ends and 0 gaps.
+    scoreLookupTab[ScoreKey(3, 1, 0)] = 400000;   // 3 in a row with 1 open end and 0 gaps.
+    scoreLookupTab[ScoreKey(3, 0, 0)] = 100000;   // 3 in a row with 0 open ends and 0 gaps.
+    scoreLookupTab[ScoreKey(3, 2, 1)] = 50000;    // 3 in a row with 2 open ends and 1 gap.
+    scoreLookupTab[ScoreKey(3, 1, 1)] = 10000;    // 3 in a row with 1 open end and 1 gap.
 
-    scoreLookupTab[ScoreKey(2, 2)] = 100000;
-    scoreLookupTab[ScoreKey(2, 1)] = 50000;
-    scoreLookupTab[ScoreKey(2, 0)] = 10000;
-
+    scoreLookupTab[ScoreKey(2, 2, 0)] = 100000;   // 2 in a row with 2 open ends and 0 gaps.
+    scoreLookupTab[ScoreKey(2, 1, 0)] = 50000;    // 2 in a row with 1 open end and 0 gaps.
+    scoreLookupTab[ScoreKey(2, 0, 0)] = 10000;    // 2 in a row with 0 open ends and 0 gaps.
+    scoreLookupTab[ScoreKey(2, 2, 1)] = 5000;     // 2 in a row with 2 open ends and 1 gap.
+    scoreLookupTab[ScoreKey(2, 1, 1)] = 2500;     // 2 in a row with 1 open end and 1 gap.
 }
+
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
     int score = 0;
@@ -143,16 +149,23 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy,
     int alignedStones = 0;
     int openEnds = 0;
     bool openStart = false, openEnd = false;
+    int gaps = 0;
 
     if (isInBounds(x - dx, y - dy) && !opponentBits.test(x - dx, y - dy)) {
         openStart = true;
     }
 
-    while (isInBounds(x, y) && bits.test(x, y)) {
-        alignedStones++;
+    while (isInBounds(x, y)) {
+        if (bits.test(x, y)) {
+            alignedStones++;
+        } else if (!opponentBits.test(x, y) && gaps == 0) {
+            gaps++;
+            alignedStones++;
+        } else {
+            break;
+        }
         x += dx;
         y += dy;
-
     }
 
     if (isInBounds(x, y) && !opponentBits.test(x, y)) {
@@ -162,5 +175,5 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy,
     if (openStart) openEnds++;
     if (openEnd) openEnds++;
 
-    return scoreLookupTab[ScoreKey(alignedStones, openEnds)];
+    return scoreLookupTab[ScoreKey(alignedStones, openEnds, gaps)];
 }
