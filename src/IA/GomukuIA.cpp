@@ -7,22 +7,22 @@
 #include "Perfcounter.hpp"
 
 GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
+
     scoreLookupTab[ScoreKey(5, 2)] = 10000000;   // 5 aligned stones with 2 open ends
     scoreLookupTab[ScoreKey(5, 1)] = 10000000;   // 5 aligned stones with 1 open end
     scoreLookupTab[ScoreKey(5, 0)] = 10000000;   // 5 aligned stones with 0 open ends
 
     scoreLookupTab[ScoreKey(4, 2)] = 90000000;   // 4 aligned stones with 2 open ends
-    scoreLookupTab[ScoreKey(4, 1)] = 80000000;   // 4 aligned stones with 1 open end
+    scoreLookupTab[ScoreKey(4, 1)] = 60000000;   // 4 aligned stones with 1 open end
     scoreLookupTab[ScoreKey(4, 0)] = 200000;     // 4 aligned stones with 0 open ends
 
-    scoreLookupTab[ScoreKey(3, 2)] = 500000;     // 3 aligned stones with 2 open ends
-    scoreLookupTab[ScoreKey(3, 1)] = 400000;     // 3 aligned stones with 1 open end
+    scoreLookupTab[ScoreKey(3, 2)] = 50000000;   // 3 aligned stones with 2 open ends
+    scoreLookupTab[ScoreKey(3, 1)] = 200000;     // 3 aligned stones with 1 open end
     scoreLookupTab[ScoreKey(3, 0)] = 100000;     // 3 aligned stones with 0 open ends
 
     scoreLookupTab[ScoreKey(2, 2)] = 100000;     // 2 aligned stones with 2 open ends
     scoreLookupTab[ScoreKey(2, 1)] = 50000;      // 2 aligned stones with 1 open end
     scoreLookupTab[ScoreKey(2, 0)] = 10000;      // 2 aligned stones with 0 open ends
-
 }
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
