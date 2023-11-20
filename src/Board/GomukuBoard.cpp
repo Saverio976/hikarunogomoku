@@ -43,12 +43,17 @@ bool GomukuBoard::isOccupied(int x, int y) const {
 
 std::vector<std::pair<int, int>> GomukuBoard::getPossibleMoves() const {
     std::vector<std::pair<int, int>> moves;
+    int minXUsable = std::max(_minX - 1, 0);
+    int maxXUsable = std::min(_maxX + 1, BOARD_SIZE - 1);
+    int minYUsable = std::max(_minY - 1, 0);
+    int maxYUsable = std::min(_maxY + 1, BOARD_SIZE - 1);
+
     if (isFirstMove()) {
         moves.emplace_back(10, 10);
         return moves;
     } else {
-        for (int x = _minX; x <= _maxX; ++x) {
-            for (int y = _minY; y <= _maxY; ++y) {
+        for (int x = minXUsable; x <= maxXUsable; ++x) {
+            for (int y = minYUsable; y <= maxYUsable; ++y) {
                 if (!isOccupied(x, y) && isAdjacentToOccupied(x, y)) {
                     moves.emplace_back(x, y);
                 }
