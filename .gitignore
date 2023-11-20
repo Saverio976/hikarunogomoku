@@ -225,3 +225,6 @@ src/Patterns/Pattern*.hpp
 /logs/*
 .DS_Store
 .idea/*
+
+#liskvork
+liskvork-master

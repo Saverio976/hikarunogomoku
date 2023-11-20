@@ -23,6 +23,8 @@ public:
     bool isOccupied(int x, int y) const;
     std::vector<std::pair<int, int>> getPossibleMoves() const;
 
+    bool isGameOver() const;
+
     int getMinX() const;
     int getMaxX() const;
     int getMinY() const;
@@ -43,6 +45,12 @@ private:
 
     void recalculateCorners();
 
+
+    bool hasFiveInARow(const Bits400& bits) const;
+
+    bool checkDirection(const Bits400& bits, int x, int y, int dx, int dy) const;
+
+    bool isInBounds(int x, int y) const;
     int _minX;
     int _minY;
     int _maxX;

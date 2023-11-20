@@ -21,14 +21,14 @@ public:
         _opponentMaskPositions = opponentPattern & careMask;
         _playerMaskPositionsCpy = _playerMaskPositions;
         _opponentMaskPositionsCpy = _opponentMaskPositions;
-        const auto [minY, maxY] = std::minmax_element(_playerMaskPositions.begin(), _playerMaskPositions.end(), [](const Position& a, const Position& b) {
+        const auto [_minY, _maxY] = std::minmax_element(_playerMaskPositions.begin(), _playerMaskPositions.end(), [](const Position& a, const Position& b) {
             return a.y < b.y;
         });
-        const auto [minX, maxX] = std::minmax_element(_playerMaskPositions.begin(), _playerMaskPositions.end(), [](const Position& a, const Position& b) {
+        const auto [_minX, _maxX] = std::minmax_element(_playerMaskPositions.begin(), _playerMaskPositions.end(), [](const Position& a, const Position& b) {
             return a.x < b.x;
         });
-        _maxWidth = maxX->x - minX->x + 1;
-        _maxHeight = maxY->y - minY->y + 1;
+        _maxWidth = _maxX->x - _minX->x + 1;
+        _maxHeight = _maxY->y - _minY->y + 1;
     }
 
     bool isMatch(const Bits400& playerBoard, const Bits400& opponentBoard) const;

@@ -42,10 +42,6 @@ bool GomukuBoard::isOccupied(int x, int y) const {
 }
 
 std::vector<std::pair<int, int>> GomukuBoard::getPossibleMoves() const {
-    // if (isFirstMove()) {
-    //     return {std::make_pair(10, 10)};
-    // }
-    // return std::vector<std::pair<int, int>>(possibleMoves.begin(), possibleMoves.end());
     std::vector<std::pair<int, int>> moves;
     if (isFirstMove()) {
         moves.emplace_back(10, 10);
@@ -64,6 +60,52 @@ std::vector<std::pair<int, int>> GomukuBoard::getPossibleMoves() const {
 
 bool GomukuBoard::isFirstMove() const {
     return player.none() && opponent.none();
+}
+
+bool GomukuBoard::isGameOver() const {
+    if (hasFiveInARow(player) || hasFiveInARow(opponent)) {
+        return true;
+    }
+
+    for (int x = 0; x < BOARD_SIZE; ++x) {
+        for (int y = 0; y < BOARD_SIZE; ++y) {
+            if (!isOccupied(x, y)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool GomukuBoard::hasFiveInARow(const Bits400& bits) const {
+    for (int x = _minX; x <= _maxX; ++x) {
+        for (int y = _minY; y <= _maxY; ++y) {
+            if (checkDirection(bits, x, y, 1, 0) ||
+                checkDirection(bits, x, y, 0, 1) ||
+                checkDirection(bits, x, y, 1, 1) ||
+                checkDirection(bits, x, y, 1, -1)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool GomukuBoard::checkDirection(const Bits400& bits, int x, int y, int dx, int dy) const {
+    int count = 0;
+
+    while (isInBounds(x, y) && bits.test(x, y) && count < 5) {
+        count++;
+        x += dx;
+        y += dy;
+    }
+
+    return count == 5;
+}
+
+
+bool GomukuBoard::isInBounds(int x, int y) const {
+    return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
 }
 
 bool GomukuBoard::isAdjacentToOccupied(int x, int y) const {
