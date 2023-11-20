@@ -24,7 +24,13 @@ public:
     void reset(int x, int y);
     bool isOccupied(int x, int y) const;
     std::vector<std::pair<int, int>> getPossibleMoves() const;
-    int _minX, _minY, _maxX, _maxY;
+
+    int getMinX() const;
+    int getMaxX() const;
+    int getMinY() const;
+    int getMaxY() const;
+
+private:
     bool isFirstMove() const;
     bool isAdjacentToOccupied(int x, int y) const;
 
@@ -46,4 +52,8 @@ public:
     bool checkDirection(const Bits400& bits, int x, int y, int dx, int dy) const;
 
     bool isInBounds(int x, int y) const;
+    int _minX;
+    int _minY;
+    int _maxX;
+    int _maxY;
 };

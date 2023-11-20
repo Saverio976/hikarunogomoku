@@ -29,11 +29,10 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
     int score = 0;
     Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
 
-    int lowerX = std::max(0, board._minX - 1);
-    int lowerY = std::max(0, board._minY - 1);
-    int upperX = std::min(BOARD_SIZE - 1, board._maxX + 1);
-    int upperY = std::min(BOARD_SIZE - 1, board._maxY + 1);
-
+    int lowerX = std::max(0, board.getMinX() - 1);
+    int lowerY = std::max(0, board.getMinY() - 1);
+    int upperX = std::min(BOARD_SIZE - 1, board.getMaxX() + 1);
+    int upperY = std::min(BOARD_SIZE - 1, board.getMaxY() + 1);
     for (std::size_t y = lowerY; y <= upperY; ++y) {
         for (std::size_t x = lowerX; x <= upperX; ++x) {
             if (!board.isOccupied(x, y)) {
@@ -153,6 +152,7 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy,
         alignedStones++;
         x += dx;
         y += dy;
+
     }
 
     if (isInBounds(x, y) && !opponentBits.test(x, y)) {

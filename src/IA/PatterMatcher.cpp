@@ -24,7 +24,7 @@ bool PatternMatcher::set_increment(std::size_t x, std::size_t y)
     if (x >= 20 || y >= 20) {
         throw std::out_of_range("Position out of range");
     }
-    if (x + _maxWidth > 20 || y + _maxHeight > 20) {
+    if (x + _maxWidth >= 20 || y + _maxHeight >= 20) {
         _isValid = false;
         return false;
     }

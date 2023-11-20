@@ -49,8 +49,8 @@ std::vector<std::pair<int, int>> GomukuBoard::getPossibleMoves() const {
         moves.emplace_back(10, 10);
         return moves;
     } else {
-        for (int x = _minX; x <= _maxXP; ++x) {
-            for (int y = _minY; y <= _maxYP; ++y) {
+        for (int x = _minX; x <= _maxX; ++x) {
+            for (int y = _minY; y <= _maxY; ++y) {
                 if (!isOccupied(x, y) && isAdjacentToOccupied(x, y)) {
                     moves.emplace_back(x, y);
                 }
@@ -124,4 +124,20 @@ bool GomukuBoard::isAdjacentToOccupied(int x, int y) const {
         }
     }
     return false;
+}
+
+int GomukuBoard::getMinX() const {
+    return _minX;
+}
+
+int GomukuBoard::getMaxX() const {
+    return _maxX;
+}
+
+int GomukuBoard::getMinY() const {
+    return _minY;
+}
+
+int GomukuBoard::getMaxY() const {
+    return _maxY;
 }
