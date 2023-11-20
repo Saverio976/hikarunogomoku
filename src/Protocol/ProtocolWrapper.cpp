@@ -40,6 +40,7 @@ ProtocolWrapper::ProtocolWrapper()
     Protocol::addCommandListener(Protocol::Command::START, &ProtocolWrapper::sendStart);
     Protocol::addCommandListener(Protocol::Command::ABOUT, &ProtocolWrapper::sendAbout);
     Protocol::addCommandListener(Protocol::Command::END, &ProtocolWrapper::endCallback);
+    Protocol::addCommandListener(Protocol::Command::INFO, &ProtocolWrapper::onInfo);
     Protocol::start();
 }
 
@@ -98,4 +99,9 @@ void ProtocolWrapper::sendAbout(Protocol::Command command)
 void ProtocolWrapper::endCallback(Protocol::Command command)
 {
     Perfcounter::writeStats("stats.txt");
+}
+
+void ProtocolWrapper::onInfo(Protocol::Command command)
+{
+    return;
 }

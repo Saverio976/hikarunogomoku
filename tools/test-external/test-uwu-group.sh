@@ -27,7 +27,7 @@ test() {
     echo "testing $1..."
     echo -e "$2" | "$executable" > res.txt &
     PID=$!
-    while [[ "$(cat res.txt)" == "" ]]; do
+    while [[ "$(wc -l res.txt | cut -f1 -d' ')" -lt "2" ]]; do
         sleep 0.1
     done
     kill -9 $PID &>/dev/null
