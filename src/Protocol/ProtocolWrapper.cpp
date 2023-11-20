@@ -73,7 +73,7 @@ void ProtocolWrapper::sendMove(Protocol::Command command)
             Perfcounter::Counter counter(Perfcounter::PerfType::TIME_ALGO_FULL);
             posPair = getMove(poss);
         }
-        Protocol::sendBeginResponse(posPair.first, posPair.second);
+        Protocol::sendBoardResponse(posPair.first, posPair.second);
         return;
     } else {
         Protocol::sendError("Invalid command");
