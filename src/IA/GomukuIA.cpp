@@ -8,21 +8,15 @@
 
 GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
 
-    scoreLookupTab[ScoreKey(5, 2)] = 10000000;   // 5 aligned stones with 2 open ends
-    scoreLookupTab[ScoreKey(5, 1)] = 10000000;   // 5 aligned stones with 1 open end
-    scoreLookupTab[ScoreKey(5, 0)] = 10000000;   // 5 aligned stones with 0 open ends
+    scoreLookupTab[ScoreKey(5, 0)] = 100;   // 5 aligned stones with 0 open ends
 
-    scoreLookupTab[ScoreKey(4, 2)] = 90000000;   // 4 aligned stones with 2 open ends
-    scoreLookupTab[ScoreKey(4, 1)] = 60000000;   // 4 aligned stones with 1 open end
-    scoreLookupTab[ScoreKey(4, 0)] = 200000;     // 4 aligned stones with 0 open ends
+    scoreLookupTab[ScoreKey(4, 0)] = 50;     // 4 aligned stones with 0 open ends
 
-    scoreLookupTab[ScoreKey(3, 2)] = 50000000;   // 3 aligned stones with 2 open ends
-    scoreLookupTab[ScoreKey(3, 1)] = 200000;     // 3 aligned stones with 1 open end
-    scoreLookupTab[ScoreKey(3, 0)] = 100000;     // 3 aligned stones with 0 open ends
+    scoreLookupTab[ScoreKey(3, 0)] = 20;     // 3 aligned stones with 0 open ends
 
-    scoreLookupTab[ScoreKey(2, 2)] = 100000;     // 2 aligned stones with 2 open ends
-    scoreLookupTab[ScoreKey(2, 1)] = 50000;      // 2 aligned stones with 1 open end
-    scoreLookupTab[ScoreKey(2, 0)] = 10000;      // 2 aligned stones with 0 open ends
+    scoreLookupTab[ScoreKey(2, 0)] = 10;      // 2 aligned stones with 0 open ends
+
+    scoreLookupTab[ScoreKey(1, 0)] = 1;       // 1 aligned stones with 0 open ends
 }
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
@@ -140,27 +134,45 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy,
     Bits400& bits = isPlayer ? board.player : board.opponent;
     Bits400& opponentBits = isPlayer ? board.opponent : board.player;
 
-    int alignedStones = 0;
-    int openEnds = 0;
-    bool openStart = false, openEnd = false;
+    int potentialLineLength = 0;
+    int stonesAligned = 0;
+    bool spaceForWin = false;
 
-    if (isInBounds(x - dx, y - dy) && !opponentBits.test(x - dx, y - dy)) {
-        openStart = true;
+    for (int i = 0; i < 5; ++i) {
+        if (!isInBounds(x + i * dx, y + i * dy) || opponentBits.test(x + i * dx, y + i * dy)) {
+            break;
+        }
+        if (bits.test(x + i * dx, y + i * dy)) {
+            stonesAligned++;
+        }
+        potentialLineLength++;
     }
 
-    while (isInBounds(x, y) && bits.test(x, y)) {
-        alignedStones++;
-        x += dx;
-        y += dy;
-
+    for (int i = 1; i < 5; ++i) {
+        if (!isInBounds(x - i * dx, y - i * dy) || opponentBits.test(x - i * dx, y - i * dy)) {
+            break;
+        }
+        if (bits.test(x - i * dx, y - i * dy)) {
+            stonesAligned++;
+        }
+        potentialLineLength++;
     }
 
-    if (isInBounds(x, y) && !opponentBits.test(x, y)) {
-        openEnd = true;
+    if (potentialLineLength >= 5) {
+        spaceForWin = true;
     }
 
-    if (openStart) openEnds++;
-    if (openEnd) openEnds++;
+    if (spaceForWin) {
+        switch (stonesAligned) {
+            case 5: return scoreLookupTab[ScoreKey(5, 0)];
+            case 4: return scoreLookupTab[ScoreKey(4, 0)];
+            case 3: return scoreLookupTab[ScoreKey(3, 0)];
+            case 2: return scoreLookupTab[ScoreKey(2, 0)];
+            case 1: return scoreLookupTab[ScoreKey(1, 0)];
+            default: break;
+        }
+    }
 
-    return scoreLookupTab[ScoreKey(alignedStones, openEnds)];
+    return 0;
 }
+
