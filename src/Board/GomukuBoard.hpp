@@ -9,6 +9,8 @@
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
+#include <random>
+#include <algorithm>
 
 constexpr int BOARD_SIZE = 20;
 constexpr int BOARD_BITS = BOARD_SIZE * BOARD_SIZE;
@@ -22,8 +24,7 @@ public:
     void reset(int x, int y);
     bool isOccupied(int x, int y) const;
     std::vector<std::pair<int, int>> getPossibleMoves() const;
-    int minX, minY, maxX, maxY;
-private:
+    int _minX, _minY, _maxX, _maxY;
     bool isFirstMove() const;
     bool isAdjacentToOccupied(int x, int y) const;
 
@@ -36,6 +37,13 @@ private:
     std::unordered_set<std::pair<int, int>, pair_hash> possibleMoves;
     std::unordered_map<std::pair<int, int>, int, pair_hash> referenceCounts;
 
-    void updatePossibleMoves(int x, int y, bool isSet);
     void recalculateCorners();
+
+    bool isGameOver() const;
+
+    bool hasFiveInARow(const Bits400& bits) const;
+
+    bool checkDirection(const Bits400& bits, int x, int y, int dx, int dy) const;
+
+    bool isInBounds(int x, int y) const
 };

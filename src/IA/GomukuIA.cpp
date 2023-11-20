@@ -5,104 +5,162 @@
 #include "GomukuIA.hpp"
 #include "GomukuBoard.hpp"
 #include "Perfcounter.hpp"
-#include <climits>
-#include <cstddef>
-#include <random>
 
 GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
-    auto patterns = Pattern20::getPatterns();
-    for (auto& pattern : patterns) {
-        auto matcher = PatternMatcher(pattern.getDataPlayer(), pattern.getDataOpponent(), pattern.getMask());
-        patternMatchers.emplace_back(matcher, pattern.getScore());
-    }
+    scoreLookupTab[ScoreKey(5, 2)] = 10000000;
+    scoreLookupTab[ScoreKey(5, 1)] = 10000000;
+    scoreLookupTab[ScoreKey(5, 0)] = 10000000;
+
+    scoreLookupTab[ScoreKey(4, 2)] = 90000000;
+    scoreLookupTab[ScoreKey(4, 1)] = 80000000;
+    scoreLookupTab[ScoreKey(4, 0)] = 200000;
+
+    scoreLookupTab[ScoreKey(3, 2)] = 500000;
+    scoreLookupTab[ScoreKey(3, 1)] = 400000;
+    scoreLookupTab[ScoreKey(3, 0)] = 100000;
+
+    scoreLookupTab[ScoreKey(2, 2)] = 100000;
+    scoreLookupTab[ScoreKey(2, 1)] = 50000;
+    scoreLookupTab[ScoreKey(2, 0)] = 10000;
+
 }
 
-inline int GomukuAI::evaluateBoard(const GomukuBoard &board, bool isPlayer) {
+inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
     int score = 0;
     Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
 
-    int lowerX = std::max(0, board.minX - 1);
-    int lowerY = std::max(0, board.minY - 1);
-    int upperX = std::min(BOARD_SIZE - 1, board.maxX + 1);
-    int upperY = std::min(BOARD_SIZE - 1, board.maxY + 1);
+    int lowerX = std::max(0, board._minX - 1);
+    int lowerY = std::max(0, board._minY - 1);
+    int upperX = std::min(BOARD_SIZE - 1, board._maxX + 1);
+    int upperY = std::min(BOARD_SIZE - 1, board._maxY + 1);
 
     for (std::size_t y = lowerY; y <= upperY; ++y) {
         for (std::size_t x = lowerX; x <= upperX; ++x) {
-            for (auto& patternMatcher : patternMatchers) {
-                patternMatcher.first.set_increment(x, y);
-                if (isPlayer) {
-                    if (patternMatcher.first.isMatch(board.player, board.opponent)) {
-                        score += patternMatcher.second;
-                    }
-                } else {
-                    if (patternMatcher.first.isMatch(board.opponent, board.player)) {
-                        score -= patternMatcher.second;
-                    }
-                }
+            if (!board.isOccupied(x, y)) {
+                continue;
             }
+            score += evaluateDirection(board, x, y, 1, 0, true);
+            score += evaluateDirection(board, x, y, 0, 1, true);
+            score += evaluateDirection(board, x, y, 1, 1, true);
+            score += evaluateDirection(board, x, y, 1, -1, true);
+
+            score -= evaluateDirection(board, x, y, 1, 0, false) * 2;
+            score -= evaluateDirection(board, x, y, 0, 1, false) * 2;
+            score -= evaluateDirection(board, x, y, 1, 1, false) * 2;
+            score -= evaluateDirection(board, x, y, 1, -1, false) * 2;
         }
     }
     return score;
 }
 
-inline int GomukuAI::maximize(GomukuBoard& board, int depth, int alpha, int beta) {
-    if (depth == maxDepth) {
-        return evaluateBoard(board);
-    }
-
-    int maxEval = INT_MIN;
-    auto possibleMoves = board.getPossibleMoves();
-
-    for (auto &[x, y] : possibleMoves) {
-        board.set(x, y, true);
-        int eval = minimize(board, depth + 1, alpha, beta);
-        board.reset(x, y);
-        maxEval = std::max(maxEval, eval);
-        alpha = std::max(alpha, eval);
-        if (beta <= alpha) {
-            return maxEval;
-        }
-    }
-    return maxEval;
-}
-
-inline int GomukuAI::minimize(GomukuBoard& board, int depth, int alpha, int beta) {
-    if (depth == maxDepth) {
-        return evaluateBoard(board, false);
-    }
-
-    int minEval = INT_MAX;
-    auto possibleMoves = board.getPossibleMoves();
-
-    for (auto &[x, y] : possibleMoves) {
-        board.set(x, y, false);
-        int eval = maximize(board, depth + 1, alpha, beta);
-        board.reset(x, y);
-        minEval = std::min(minEval, eval);
-        beta = std::min(beta, eval);
-        if (beta <= alpha) {
-            return minEval;
-        }
-    }
-    return minEval;
-}
-
-
 std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
-    int bestValue = INT_MIN;
+    int bestScore = std::numeric_limits<int>::min();
     std::pair<int, int> bestMove = {-1, -1};
+    int alpha = std::numeric_limits<int>::min();
+    int beta = std::numeric_limits<int>::max();
 
-    auto possibleMoves = board.getPossibleMoves();
+    auto moves = board.getPossibleMoves();
 
-    for (auto &[x, y] : possibleMoves) {
-        board.set(x, y, true);
-        int moveValue = minimize(board, 1, INT_MIN, INT_MAX);
-        board.reset(x, y);
-        if (moveValue > bestValue) {
-            bestMove = {x, y};
-            bestValue = moveValue;
+    if (moves.size() == 1) {
+        return moves[0];
+    }
+
+    int depth = moves.size() > 15 ? 4 : 5;
+    depth = moves.size() > 30 ? 3 : depth;
+
+    int int_min = std::numeric_limits<int>::min();
+    int int_max = std::numeric_limits<int>::max();
+
+    for (const auto &move : board.getPossibleMoves()) {
+        board.set(move.first, move.second, true);
+        int moveScore = minValue(board, depth - 1, int_min, int_max);
+        board.reset(move.first, move.second);
+
+        if (moveScore > bestScore) {
+            bestScore = moveScore;
+            bestMove = move;
         }
     }
+
     return bestMove;
 }
 
+int GomukuAI::minimax(GomukuBoard &board, int depth, int alpha, int beta, bool isMaximizingPlayer) {
+    if (depth == 0 || board.isGameOver()) {
+        return evaluateBoard(board);
+    }
+
+    if (isMaximizingPlayer) {
+        return maxValue(board, depth, alpha, beta);
+    } else {
+        return minValue(board, depth, alpha, beta);
+    }
+}
+
+int GomukuAI::maxValue(GomukuBoard &board, int depth, int alpha, int beta) {
+    if (depth == 0 || board.isGameOver()) {
+        return evaluateBoard(board);
+    }
+    int value = std::numeric_limits<int>::min();
+
+    for (auto move : board.getPossibleMoves()) {
+        board.set(move.first, move.second, true);
+        value = std::max(value, minValue(board, depth - 1, alpha, beta));
+        board.reset(move.first, move.second);
+        if (value >= beta) {
+            return value;
+        }
+        alpha = std::max(alpha, value);
+    }
+    return value;
+}
+
+int GomukuAI::minValue(GomukuBoard &board, int depth, int alpha, int beta) {
+    if (depth == 0 || board.isGameOver()) {
+        return evaluateBoard(board);
+    }
+    int value = std::numeric_limits<int>::max();
+
+    for (auto move : board.getPossibleMoves()) {
+        board.set(move.first, move.second, false);
+        value = std::min(value, maxValue(board, depth - 1, alpha, beta));
+        board.reset(move.first, move.second);
+        if (value <= alpha) {
+            return value;
+        }
+        beta = std::min(beta, value);
+    }
+    return value;
+}
+
+bool GomukuAI::isInBounds(int x, int y) {
+    return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
+}
+
+int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy, bool isPlayer) {
+    Bits400& bits = isPlayer ? board.player : board.opponent;
+    Bits400& opponentBits = isPlayer ? board.opponent : board.player;
+
+    int alignedStones = 0;
+    int openEnds = 0;
+    bool openStart = false, openEnd = false;
+
+    if (isInBounds(x - dx, y - dy) && !opponentBits.test(x - dx, y - dy)) {
+        openStart = true;
+    }
+
+    while (isInBounds(x, y) && bits.test(x, y)) {
+        alignedStones++;
+        x += dx;
+        y += dy;
+    }
+
+    if (isInBounds(x, y) && !opponentBits.test(x, y)) {
+        openEnd = true;
+    }
+
+    if (openStart) openEnds++;
+    if (openEnd) openEnds++;
+
+    return scoreLookupTab[ScoreKey(alignedStones, openEnds)];
+}
