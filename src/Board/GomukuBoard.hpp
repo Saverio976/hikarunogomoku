@@ -45,5 +45,5 @@ public:
 
     bool checkDirection(const Bits400& bits, int x, int y, int dx, int dy) const;
 
-    bool isInBounds(int x, int y) const
+    bool isInBounds(int x, int y) const;
 };
