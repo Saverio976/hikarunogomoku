@@ -248,6 +248,7 @@ void Protocol::understandReceiveString(const std::string &bufferReceive)
     } else if (bufferReceive.starts_with("INFO ")) {
         ProtocolInfo::setInfo(bufferReceive.substr(5));
         _commandListeners[static_cast<std::size_t>(Command::INFO)](Command::INFO);
+        changeState = false;
     } else if (bufferReceive.starts_with("ABOUT")) {
         _commandListeners[static_cast<std::size_t>(Command::ABOUT)](Command::ABOUT);
     } else if (bufferReceive.starts_with("END")) {
