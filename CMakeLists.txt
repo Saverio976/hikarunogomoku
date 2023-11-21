@@ -17,6 +17,14 @@ project(
     LANGUAGES CXX
 )
 
+if (MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+else()
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+    set(BUILD_SHARED_LIBS OFF)
+    set(CMAKE_EXE_LINKER_FLAGS "-static")
+endif()
+
 add_executable(${PROJECT_NAME})
 
 add_subdirectory(src)

@@ -58,8 +58,7 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
         return moves[0];
     }
 
-    int depth = moves.size() > 15 ? 4 : 5;
-    depth = moves.size() > 30 ? 3 : depth;
+    int depth = moves.size() > 15 ? 3 : 4;
 
     int int_min = std::numeric_limits<int>::min();
     int int_max = std::numeric_limits<int>::max();
