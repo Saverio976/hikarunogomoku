@@ -20,6 +20,9 @@ clean:
 fclean: clean
 	echo "Remove the folder 'build' yourself"
 
+static: fclean
+	cmake -S . -B build -DBUILD_STATIC=ON
+
 re: fclean all
 
 debug:
