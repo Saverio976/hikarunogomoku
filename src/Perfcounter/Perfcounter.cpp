@@ -82,7 +82,7 @@ void Perfcounter::writeStats(const std::string &filename)
     }
     for (const auto &it : Perfcounter::_counters) {
         file << "Perfcounter::" << getPerfTypeString(it.first) << ":" << std::endl;
-        file << "--- Mean count: " << it.second.getMeanCount() << std::endl;
+        file << "--- Mean count: " << static_cast<std::size_t>(it.second.getMeanCount()) << std::endl;
         file << "--- Max count: " << it.second.getMaxCount() << std::endl;
         file << "--- Min count: " << it.second.getMinCount() << std::endl;
         file << "--- Number of samples: " << it.second.getNumSample() << std::endl;
