@@ -59,6 +59,10 @@ std::pair<int, std::pair<int, int>> GomukuAI::findBestMoveThread(GomukuBoard &bo
 
     for (const auto &move : moves) {
         board.set(move.first, move.second, true);
+        if (board.hasFiveInARow(board.player)) {
+            board.reset(move.first, move.second);
+            return {int_max, move};
+        }
         int moveScore = minValue(board, depth - 1, int_min, int_max);
         board.reset(move.first, move.second);
 
@@ -80,12 +84,12 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
         return moves[0];
     }
 
-    int depth = moves.size() > 15 ? 3 : 4;
-
-    std::size_t nb_thread = 1;
+    std::size_t nb_thread = 5;
     std::size_t slice_number = moves.size() / nb_thread;
     std::vector<std::thread> threads;
     std::mutex mutexBest;
+
+    int depth = moves.size() > 30 ? 3 : 4;
 
     for (std::size_t i = 0; i < nb_thread; ++i) {
         std::size_t start_i = i * slice_number;
@@ -95,12 +99,12 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
         std::vector<std::pair<int, int>> movesThread(slice_start, slice_end);
         threads.push_back(
             std::thread(
-                [this, &board, depth, &mutexBest, &bestScore, &bestMove, movesThread, moves]() {
-                    // auto boardThread = board;
+                [this, &board, depth, &mutexBest, &bestScore, &bestMove, movesThread]() {
+                    auto boardThread = board;
                     auto best = findBestMoveThread(
-                        board,
+                        boardThread,
                         depth,
-                        moves
+                        movesThread
                     );
                     mutexBest.lock();
                     if (best.first > bestScore) {
