@@ -2,24 +2,28 @@
 // Created by Théo on 10/11/2023.
 //
 
+#include <vector>
+#include <thread>
 #include "GomukuIA.hpp"
 #include "GomukuBoard.hpp"
 #include "Perfcounter.hpp"
 
-GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
+GomukuAI::GomukuAI(int depth) : _maxDepth(depth)
+{
 
-    scoreLookupTab[ScoreKey(5, 0)] = 100;   // 5 aligned stones with 0 open ends
+    _scoreLookupTab[ScoreKey(5, 0)] = 100;   // 5 aligned stones with 0 open ends
 
-    scoreLookupTab[ScoreKey(4, 0)] = 50;     // 4 aligned stones with 0 open ends
+    _scoreLookupTab[ScoreKey(4, 0)] = 50;     // 4 aligned stones with 0 open ends
 
-    scoreLookupTab[ScoreKey(3, 0)] = 20;     // 3 aligned stones with 0 open ends
+    _scoreLookupTab[ScoreKey(3, 0)] = 20;     // 3 aligned stones with 0 open ends
 
-    scoreLookupTab[ScoreKey(2, 0)] = 10;      // 2 aligned stones with 0 open ends
+    _scoreLookupTab[ScoreKey(2, 0)] = 10;      // 2 aligned stones with 0 open ends
 
-    scoreLookupTab[ScoreKey(1, 0)] = 1;       // 1 aligned stones with 0 open ends
+    _scoreLookupTab[ScoreKey(1, 0)] = 1;       // 1 aligned stones with 0 open ends
 }
 
-inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
+inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
+{
     int score = 0;
     Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
 
@@ -46,24 +50,14 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
     return score;
 }
 
-std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
+std::pair<int, std::pair<int, int>> GomukuAI::findBestMoveThread(GomukuBoard &board, int depth, const std::vector<std::pair<int, int>> &moves)
+{
     int bestScore = std::numeric_limits<int>::min();
     std::pair<int, int> bestMove = {-1, -1};
-    int alpha = std::numeric_limits<int>::min();
-    int beta = std::numeric_limits<int>::max();
-
-    auto moves = board.getPossibleMoves();
-
-    if (moves.size() == 1) {
-        return moves[0];
-    }
-
-    int depth = moves.size() > 15 ? 3 : 4;
-
     int int_min = std::numeric_limits<int>::min();
     int int_max = std::numeric_limits<int>::max();
 
-    for (const auto &move : board.getPossibleMoves()) {
+    for (const auto &move : moves) {
         board.set(move.first, move.second, true);
         int moveScore = minValue(board, depth - 1, int_min, int_max);
         board.reset(move.first, move.second);
@@ -73,20 +67,56 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
             bestMove = move;
         }
     }
-
-    return bestMove;
+    return {bestScore, bestMove};
 }
 
-int GomukuAI::minimax(GomukuBoard &board, int depth, int alpha, int beta, bool isMaximizingPlayer) {
-    if (depth == 0 || board.isGameOver()) {
-        return evaluateBoard(board);
+std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
+    int bestScore = std::numeric_limits<int>::min();
+    std::pair<int, int> bestMove = {-1, -1};
+
+    auto moves = board.getPossibleMoves();
+
+    if (moves.size() == 1) {
+        return moves[0];
     }
 
-    if (isMaximizingPlayer) {
-        return maxValue(board, depth, alpha, beta);
-    } else {
-        return minValue(board, depth, alpha, beta);
+    int depth = moves.size() > 15 ? 3 : 4;
+
+    std::size_t nb_thread = 1;
+    std::size_t slice_number = moves.size() / nb_thread;
+    std::vector<std::thread> threads;
+    std::mutex mutexBest;
+
+    for (std::size_t i = 0; i < nb_thread; ++i) {
+        std::size_t start_i = i * slice_number;
+        std::size_t end_i = (i + 1) * slice_number;
+        auto slice_start = (i == 0) ? moves.begin() : moves.begin() + (i * slice_number);
+        auto slice_end = (i == nb_thread - 1) ? moves.end() : moves.begin() + ((i + 1) * slice_number);
+        std::vector<std::pair<int, int>> movesThread(slice_start, slice_end);
+        threads.push_back(
+            std::thread(
+                [this, &board, depth, &mutexBest, &bestScore, &bestMove, movesThread, moves]() {
+                    // auto boardThread = board;
+                    auto best = findBestMoveThread(
+                        board,
+                        depth,
+                        moves
+                    );
+                    mutexBest.lock();
+                    if (best.first > bestScore) {
+                        bestScore = best.first;
+                        bestMove = best.second;
+                    }
+                    mutexBest.unlock();
+                }
+            )
+        );
     }
+
+    for (auto &thread : threads) {
+        thread.join();
+    }
+    return bestMove;
 }
 
 int GomukuAI::maxValue(GomukuBoard &board, int depth, int alpha, int beta) {
@@ -163,11 +193,11 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy,
 
     if (spaceForWin) {
         switch (stonesAligned) {
-            case 5: return scoreLookupTab[ScoreKey(5, 0)];
-            case 4: return scoreLookupTab[ScoreKey(4, 0)];
-            case 3: return scoreLookupTab[ScoreKey(3, 0)];
-            case 2: return scoreLookupTab[ScoreKey(2, 0)];
-            case 1: return scoreLookupTab[ScoreKey(1, 0)];
+            case 5: return _scoreLookupTab[ScoreKey(5, 0)];
+            case 4: return _scoreLookupTab[ScoreKey(4, 0)];
+            case 3: return _scoreLookupTab[ScoreKey(3, 0)];
+            case 2: return _scoreLookupTab[ScoreKey(2, 0)];
+            case 1: return _scoreLookupTab[ScoreKey(1, 0)];
             default: break;
         }
     }
