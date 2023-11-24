@@ -1,2 +1,0 @@
-[2023-11-20 23:15:35.402] [main] [warning] No config file found, creating one
-[2023-11-20 23:15:35.412] [main] [critical] Not running in headless mode is currently not possible! Please use --headless
