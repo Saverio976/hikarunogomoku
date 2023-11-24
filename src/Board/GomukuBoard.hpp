@@ -9,6 +9,7 @@
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
+#include <random>
 
 constexpr int BOARD_SIZE = 20;
 constexpr int BOARD_BITS = BOARD_SIZE * BOARD_SIZE;
@@ -17,6 +18,8 @@ class GomukuBoard {
 public:
     Bits400 player;
     Bits400 opponent;
+
+    GomukuBoard();
 
     void set(int x, int y, bool isPlayer);
     void reset(int x, int y);
@@ -32,6 +35,7 @@ public:
 
     bool hasFiveInARow(const Bits400& bits) const;
 
+    uint64_t currentHash;
 private:
     bool isFirstMove() const;
     bool isAdjacentToOccupied(int x, int y) const;
@@ -54,4 +58,11 @@ private:
     int _minY;
     int _maxX;
     int _maxY;
+
+
+    std::array<std::array<uint64_t, BOARD_SIZE>, BOARD_SIZE> playerZobristTable;
+    std::array<std::array<uint64_t, BOARD_SIZE>, BOARD_SIZE> opponentZobristTable;
+
+    void initializeZobristTable();
+    uint64_t computeHash() const;
 };

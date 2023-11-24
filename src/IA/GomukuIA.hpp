@@ -10,6 +10,7 @@
 #include <utility>
 #include <cmath>
 #include <functional>
+#include <condition_variable>
 
 struct ScoreKey {
     int alignedStones;
@@ -40,7 +41,6 @@ public:
 private:
     int _maxDepth;
     std::unordered_map<ScoreKey, int> _scoreLookupTab;
-    std::vector<std::pair<PatternMatcher, int>> _patternMatchers;
 
     std::pair<int, std::pair<int, int>> findBestMoveThread(GomukuBoard &board, int depth, const std::vector<std::pair<int, int>> &moves);
 
@@ -53,4 +53,12 @@ private:
     int maxValue(GomukuBoard &board, int depth, int alpha, int beta);
 
     int minValue(GomukuBoard &board, int depth, int alpha, int beta);
+
+    std::atomic_bool searchInterrupted;
+
+    std::condition_variable cv;
+    std::mutex cv_m;
+
+    std::unordered_map<uint64_t, int> transpositionTable;
+    std::mutex transpositionTableMutex;
 };
