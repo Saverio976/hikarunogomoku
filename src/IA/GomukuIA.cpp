@@ -6,17 +6,7 @@
 #include "GomukuBoard.hpp"
 #include "Perfcounter.hpp"
 
-GomukuAI::GomukuAI(int depth) : maxDepth(depth) {
-
-    scoreLookupTab[ScoreKey(5, 0)] = 100;   // 5 aligned stones with 0 open ends
-
-    scoreLookupTab[ScoreKey(4, 0)] = 50;     // 4 aligned stones with 0 open ends
-
-    scoreLookupTab[ScoreKey(3, 0)] = 20;     // 3 aligned stones with 0 open ends
-
-    scoreLookupTab[ScoreKey(2, 0)] = 10;      // 2 aligned stones with 0 open ends
-
-    scoreLookupTab[ScoreKey(1, 0)] = 1;       // 1 aligned stones with 0 open ends
+GomukuAI::GomukuAI(int depth) : maxDepth(depth), bestScore(std::numeric_limits<int>::min()){
 }
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
@@ -47,46 +37,54 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board) {
 }
 
 std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
-    int bestScore = std::numeric_limits<int>::min();
-    std::pair<int, int> bestMove = {-1, -1};
-    int alpha = std::numeric_limits<int>::min();
-    int beta = std::numeric_limits<int>::max();
-
+    timeOut = false;
+    std::vector<std::thread> threads;
     auto moves = board.getPossibleMoves();
+    bestScore.store(std::numeric_limits<int>::min());
+    bestMove = {-1, -1};
 
-    if (moves.size() == 1) {
-        return moves[0];
+    int depth = moves.size() > 30 ? 3 : 4;
+
+    const size_t num_threads = std::thread::hardware_concurrency();
+    size_t moves_per_thread = moves.size() / num_threads;
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+    std::atomic<size_t> active_threads(num_threads);
+    std::condition_variable threads_done_cv;
+    std::mutex threads_done_mutex;
+
+    for (size_t i = 0; i < num_threads; ++i) {
+        size_t start = i * moves_per_thread;
+        size_t end = (i == num_threads - 1) ? moves.size() : (i + 1) * moves_per_thread;
+        GomukuBoard boardCopy = board;
+        threads.emplace_back([this, &boardCopy, moves, start, end, depth, &active_threads, &threads_done_cv, &threads_done_mutex]() {
+            evaluateMoves(boardCopy, moves, start, end, depth);
+            --active_threads;
+            if (active_threads == 0) {
+                std::lock_guard<std::mutex> lock(threads_done_mutex);
+                threads_done_cv.notify_one();
+            }
+        });
     }
 
-    int depth = moves.size() > 15 ? 3 : 4;
-
-    int int_min = std::numeric_limits<int>::min();
-    int int_max = std::numeric_limits<int>::max();
-
-    for (const auto &move : board.getPossibleMoves()) {
-        board.set(move.first, move.second, true);
-        int moveScore = minValue(board, depth - 1, int_min, int_max);
-        board.reset(move.first, move.second);
-
-        if (moveScore > bestScore) {
-            bestScore = moveScore;
-            bestMove = move;
+    std::thread timer_thread([&]() {
+        std::unique_lock<std::mutex> lock(threads_done_mutex);
+        if (!threads_done_cv.wait_until(lock, start_time + std::chrono::milliseconds(4980), [&] { return timeOut || active_threads == 0; })) {
+            std::lock_guard<std::mutex> guard(bestMoveMutex);
+            timeOut = true;
+            cv.notify_all();
         }
+    });
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    if (timer_thread.joinable()) {
+        timer_thread.join();
     }
 
     return bestMove;
-}
-
-int GomukuAI::minimax(GomukuBoard &board, int depth, int alpha, int beta, bool isMaximizingPlayer) {
-    if (depth == 0 || board.isGameOver()) {
-        return evaluateBoard(board);
-    }
-
-    if (isMaximizingPlayer) {
-        return maxValue(board, depth, alpha, beta);
-    } else {
-        return minValue(board, depth, alpha, beta);
-    }
 }
 
 int GomukuAI::maxValue(GomukuBoard &board, int depth, int alpha, int beta) {
@@ -163,15 +161,89 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy,
 
     if (spaceForWin) {
         switch (stonesAligned) {
-            case 5: return scoreLookupTab[ScoreKey(5, 0)];
-            case 4: return scoreLookupTab[ScoreKey(4, 0)];
-            case 3: return scoreLookupTab[ScoreKey(3, 0)];
-            case 2: return scoreLookupTab[ScoreKey(2, 0)];
-            case 1: return scoreLookupTab[ScoreKey(1, 0)];
+            case 5: return 100;
+            case 4: return 50;
+            case 3: return 20;
+            case 2: return 10;
+            case 1: return 1;
             default: break;
         }
     }
 
     return 0;
+}
+
+bool GomukuAI::didMoveBlockFour(GomukuBoard &board, int x, int y) {
+    board.set(x, y, false);
+
+    if (evaluateDirection(board, x, y, 1, 0, false) >= 100) {
+        board.set(x, y, true);
+        return true;
+    } else if (evaluateDirection(board, x, y, 0, 1, false) >= 100) {
+        board.set(x, y, true);
+        return true;
+    } else if (evaluateDirection(board, x, y, 1, 1, false) >= 100) {
+        board.set(x, y, true);
+        return true;
+    } else if (evaluateDirection(board, x, y, 1, -1, false) >= 100) {
+        board.set(x, y, true);
+        return true;
+    }
+    return false;
+}
+
+void GomukuAI::evaluateMoves(GomukuBoard &board, const std::vector<std::pair<int, int>> &moves, size_t start,
+                             size_t end, int depth) {
+    int localBestScore = std::numeric_limits<int>::min();
+    std::pair<int, int> localBestMove = {-1, -1};
+
+    for (size_t i = start; i < end; ++i) {
+        {
+            std::lock_guard<std::mutex> guard(bestMoveMutex);
+            if (timeOut) break;
+        }
+
+        const auto& move = moves[i];
+        board.set(move.first, move.second, true);
+
+        if (board.hasFiveInARow(board.player)) {
+            {
+                std::lock_guard<std::mutex> guard(bestMoveMutex);
+                bestScore.store(std::numeric_limits<int>::max());
+                bestMove = move;
+                timeOut = true;
+                cv.notify_all();
+            }
+            board.reset(move.first, move.second);
+            return;
+        }
+        if (didMoveBlockFour(board, move.first, move.second)) {
+            {
+                std::lock_guard<std::mutex> guard(bestMoveMutex);
+                bestScore.store(std::numeric_limits<int>::max());
+                bestMove = move;
+                timeOut = true;
+                cv.notify_all();
+            }
+            board.reset(move.first, move.second);
+            return;
+        }
+
+        int moveScore = minValue(board, depth - 1, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+        board.reset(move.first, move.second);
+
+        if (moveScore > localBestScore) {
+            localBestScore = moveScore;
+            localBestMove = move;
+        }
+    }
+
+    {
+        std::lock_guard<std::mutex> guard(bestMoveMutex);
+        if (localBestScore > bestScore.load() && !timeOut) {
+            bestScore.store(localBestScore);
+            bestMove = localBestMove;
+        }
+    }
 }
 

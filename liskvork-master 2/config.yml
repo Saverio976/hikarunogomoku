@@ -1,0 +1,15 @@
+debug:
+  board: false
+  enable: false
+player2:
+  limits:
+    memory: 70000000
+    time: 5000
+  exe: player2
+player1:
+  limits:
+    time: 5000
+    memory: 70000000
+  exe: player1
+general:
+  headless: false

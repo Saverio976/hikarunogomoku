@@ -5,11 +5,16 @@
 #pragma once
 
 #include "GomukuBoard.hpp"
-#include "PatterMatcher.hpp"
 #include <vector>
 #include <utility>
 #include <cmath>
 #include <functional>
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <chrono>
+#include <condition_variable>
+#include <atomic>
 
 struct ScoreKey {
     int alignedStones;
@@ -40,18 +45,26 @@ public:
 private:
     int maxDepth;
 
-    std::unordered_map<ScoreKey, int> scoreLookupTab;
+    std::atomic<int> bestScore;
+    std::pair<int, int> bestMove;
+    std::mutex bestMoveMutex;
+    std::condition_variable cv;
+    bool timeOut = false;
+    std::atomic<int> activeWorkers;
+    std::condition_variable workersFinishedCv;
 
     inline int evaluateBoard(const GomukuBoard&);
-    std::vector<std::pair<PatternMatcher, int>> patternMatchers;
 
     int evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy, bool isPlayer);
 
     bool isInBounds(int x, int y);
 
-    int minimax(GomukuBoard &board, int depth, int alpha, int beta, bool isMaximizingPlayer);
-
     int maxValue(GomukuBoard &board, int depth, int alpha, int beta);
 
     int minValue(GomukuBoard &board, int depth, int alpha, int beta);
+
+    void evaluateMoves(GomukuBoard &board, const std::vector<std::pair<int, int>>& moves, size_t start, size_t end, int depth);
+
+    bool didMoveBlockFour(GomukuBoard &board, int x, int y);
+
 };
