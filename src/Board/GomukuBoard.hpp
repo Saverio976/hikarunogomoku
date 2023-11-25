@@ -30,6 +30,8 @@ public:
     int getMinY() const;
     int getMaxY() const;
 
+    bool hasFiveInARow(const Bits400& bits) const;
+
 private:
     bool isFirstMove() const;
     bool isAdjacentToOccupied(int x, int y) const;
@@ -44,9 +46,6 @@ private:
     std::unordered_map<std::pair<int, int>, int, pair_hash> referenceCounts;
 
     void recalculateCorners();
-
-
-    bool hasFiveInARow(const Bits400& bits) const;
 
     bool checkDirection(const Bits400& bits, int x, int y, int dx, int dy) const;
 

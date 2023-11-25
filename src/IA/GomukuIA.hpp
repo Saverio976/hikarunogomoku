@@ -38,18 +38,17 @@ public:
     GomukuAI(int depth);
     std::pair<int, int> findBestMove(GomukuBoard& board);
 private:
-    int maxDepth;
+    int _maxDepth;
+    std::unordered_map<ScoreKey, int> _scoreLookupTab;
+    std::vector<std::pair<PatternMatcher, int>> _patternMatchers;
 
-    std::unordered_map<ScoreKey, int> scoreLookupTab;
+    std::pair<int, std::pair<int, int>> findBestMoveThread(GomukuBoard &board, int depth, const std::vector<std::pair<int, int>> &moves);
 
     inline int evaluateBoard(const GomukuBoard&);
-    std::vector<std::pair<PatternMatcher, int>> patternMatchers;
 
     int evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy, bool isPlayer);
 
     bool isInBounds(int x, int y);
-
-    int minimax(GomukuBoard &board, int depth, int alpha, int beta, bool isMaximizingPlayer);
 
     int maxValue(GomukuBoard &board, int depth, int alpha, int beta);
 
