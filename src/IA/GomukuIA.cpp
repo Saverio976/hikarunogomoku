@@ -14,20 +14,36 @@ GomukuAI::GomukuAI(int depth) : _maxDepth(depth)
     _movesPatterns.emplace_back(std::make_pair(100, win));
     std::vector<int> nextIsWin = {0, 1, 1, 1, 1, 0};
     _movesPatterns.emplace_back(std::make_pair(95, nextIsWin));
+
     std::vector<int> nextIsNotSureWin = {0, 1, 1, 1, 1};
     _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin));
     std::vector<int> nextIsNotSureWin2 = {1, 1, 1, 1, 0};
     _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin2));
+    std::vector<int> nextIsNotSureWin3 = {1, 1, 1, 0, 1};
+    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin3));
+    std::vector<int> nextIsNotSureWin4 = {1, 1, 0, 1, 1};
+    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin4));
+    std::vector<int> nextIsNotSureWin5 = {1, 0, 1, 1, 1};
+    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin5));
+
     std::vector<int> nextIsNotWinButOk = {0, 0, 1, 1, 1, 0};
     _movesPatterns.emplace_back(std::make_pair(50, nextIsNotWinButOk));
     std::vector<int> nextIsNotWinButOk2 = {0, 1, 1, 1, 0, 0};
     _movesPatterns.emplace_back(std::make_pair(50, nextIsNotWinButOk2));
+
     std::vector<int> stillPlaceForWin = {0, 0, 1, 1, 0, 0};
     _movesPatterns.emplace_back(std::make_pair(20, stillPlaceForWin));
     std::vector<int> stillPlaceForWinNButLess = {0, 1, 1, 0, 0};
+
     _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLess));
     std::vector<int> stillPlaceForWinNButLess2 = {0, 0, 1, 1, 0};
     _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLess2));
+
+    std::vector<int> stillPlaceForWinNButLessLess = {1, 1, 0, 0, 0};
+    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLessLess));
+    std::vector<int> stillPlaceForWinNButLessLess2 = {0, 0, 0, 1, 1};
+    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLessLess2));
+
     std::vector<int> thisSuck = {1, 0, 0, 0, 0};
     _movesPatterns.emplace_back(std::make_pair(1, thisSuck));
     std::vector<int> thisSuck2 = {0, 1, 0, 0, 0};
@@ -54,15 +70,10 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
             if (!board.isOccupied(x, y)) {
                 continue;
             }
-            score += evaluateDirection(board, x, y, 1, 0, true);
-            score += evaluateDirection(board, x, y, 0, 1, true);
-            score += evaluateDirection(board, x, y, 1, 1, true);
-            score += evaluateDirection(board, x, y, 1, -1, true);
-
-            score -= evaluateDirection(board, x, y, 1, 0, false) * 2;
-            score -= evaluateDirection(board, x, y, 0, 1, false) * 2;
-            score -= evaluateDirection(board, x, y, 1, 1, false) * 2;
-            score -= evaluateDirection(board, x, y, 1, -1, false) * 2;
+            score += evaluateDirection(board, x, y, 1, 0);
+            score += evaluateDirection(board, x, y, 0, 1);
+            score += evaluateDirection(board, x, y, 1, 1);
+            score += evaluateDirection(board, x, y, 1, -1);
         }
     }
     return score;
@@ -189,21 +200,25 @@ bool GomukuAI::isInBounds(int x, int y) {
     return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
 }
 
-int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy, bool isPlayer) {
-    Bits400& bits = isPlayer ? board.player : board.opponent;
-    Bits400& opponentBits = isPlayer ? board.opponent : board.player;
+int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy) {
+    Bits400& bits = board.player;
+    Bits400& opponentBits = board.opponent;
 
-    std::array<int, 9> tableNow = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-    int valMax = 0;
+    std::array<int, 9> tableNowPlayer = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    std::array<int, 9> tableMaxOpponent = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int valPlayer = 0;
+    int valOpponent = 0;
 
     for (int i = -4; i < 5; i++) {
         if (!isInBounds(x + i * dx, y + i * dy)) {
             continue;
         }
         if (opponentBits.test(x + i * dx, y + i * dy)) {
-            tableNow[i + 4] = 2;
+            tableNowPlayer[i + 4] = 2;
+            tableMaxOpponent[i + 4] = 1;
         } else if (bits.test(x + i * dx, y + i * dy)) {
-            tableNow[i + 4] = 1;
+            tableNowPlayer[i + 4] = 1;
+            tableMaxOpponent[i + 4] = 2;
         }
     }
     for (int i = 0; i < 9; i++) {
@@ -211,19 +226,28 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy,
             if (i + pattern.second.size() >= 9) {
                 continue;
             }
-            bool match = true;
+            bool matchPlayer = true;
+            bool matchOpponent = true;
             int curIndex = i;
             for (const auto &value : pattern.second) {
-                if (tableNow[curIndex] != value) {
-                    match = false;
+                if (tableNowPlayer[curIndex] != value) {
+                    matchPlayer = false;
+                }
+                if (tableMaxOpponent[curIndex] != value) {
+                    matchOpponent = false;
+                }
+                if (!matchOpponent && !matchPlayer) {
                     break;
                 }
                 curIndex++;
             }
-            if (match) {
-                valMax = std::max(valMax, pattern.first);
+            if (matchOpponent) {
+                valOpponent = std::max(valOpponent, pattern.first);
+            }
+            if (matchPlayer) {
+                valPlayer = std::max(valPlayer, pattern.first);
             }
         }
     }
-    return valMax;
+    return valPlayer - valOpponent;
 }

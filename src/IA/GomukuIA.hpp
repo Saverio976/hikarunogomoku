@@ -22,7 +22,7 @@ private:
 
     inline int evaluateBoard(const GomukuBoard&);
 
-    int evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy, bool isPlayer);
+    int evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy);
 
     bool isInBounds(int x, int y);
 
