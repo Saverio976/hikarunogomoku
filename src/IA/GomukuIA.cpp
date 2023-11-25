@@ -62,6 +62,15 @@ std::pair<int, std::pair<int, int>> GomukuAI::findBestMoveThread(GomukuBoard &bo
         if (board.hasFiveInARow(board.player)) {
             board.reset(move.first, move.second);
             return {int_max, move};
+        } else {
+            board.set(move.first, move.second, false);
+            if (board.hasFiveInARow(board.opponent)) {
+                board.reset(move.first, move.second);
+                bestScore = int_max - 100;
+                bestMove = move;
+                continue;
+            }
+            board.set(move.first, move.second, true);
         }
         int moveScore = minValue(board, depth - 1, int_min, int_max);
         board.reset(move.first, move.second);
