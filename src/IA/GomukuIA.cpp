@@ -10,16 +10,34 @@
 
 GomukuAI::GomukuAI(int depth) : _maxDepth(depth)
 {
-
-    _scoreLookupTab[ScoreKey(5, 0)] = 100;   // 5 aligned stones with 0 open ends
-
-    _scoreLookupTab[ScoreKey(4, 0)] = 50;     // 4 aligned stones with 0 open ends
-
-    _scoreLookupTab[ScoreKey(3, 0)] = 20;     // 3 aligned stones with 0 open ends
-
-    _scoreLookupTab[ScoreKey(2, 0)] = 10;      // 2 aligned stones with 0 open ends
-
-    _scoreLookupTab[ScoreKey(1, 0)] = 1;       // 1 aligned stones with 0 open ends
+    std::vector<int> win = {1, 1, 1, 1, 1};
+    _movesPatterns.emplace_back(std::make_pair(100, win));
+    std::vector<int> nextIsWin = {0, 1, 1, 1, 1, 0};
+    _movesPatterns.emplace_back(std::make_pair(95, nextIsWin));
+    std::vector<int> nextIsNotSureWin = {0, 1, 1, 1, 1};
+    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin));
+    std::vector<int> nextIsNotSureWin2 = {1, 1, 1, 1, 0};
+    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin2));
+    std::vector<int> nextIsNotWinButOk = {0, 0, 1, 1, 1, 0};
+    _movesPatterns.emplace_back(std::make_pair(50, nextIsNotWinButOk));
+    std::vector<int> nextIsNotWinButOk2 = {0, 1, 1, 1, 0, 0};
+    _movesPatterns.emplace_back(std::make_pair(50, nextIsNotWinButOk2));
+    std::vector<int> stillPlaceForWin = {0, 0, 1, 1, 0, 0};
+    _movesPatterns.emplace_back(std::make_pair(20, stillPlaceForWin));
+    std::vector<int> stillPlaceForWinNButLess = {0, 1, 1, 0, 0};
+    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLess));
+    std::vector<int> stillPlaceForWinNButLess2 = {0, 0, 1, 1, 0};
+    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLess2));
+    std::vector<int> thisSuck = {1, 0, 0, 0, 0};
+    _movesPatterns.emplace_back(std::make_pair(1, thisSuck));
+    std::vector<int> thisSuck2 = {0, 1, 0, 0, 0};
+    _movesPatterns.emplace_back(std::make_pair(1, thisSuck2));
+    std::vector<int> thisSuck3 = {0, 0, 1, 0, 0};
+    _movesPatterns.emplace_back(std::make_pair(1, thisSuck3));
+    std::vector<int> thisSuck4 = {0, 0, 0, 1, 0};
+    _movesPatterns.emplace_back(std::make_pair(1, thisSuck4));
+    std::vector<int> thisSuck5 = {0, 0, 0, 0, 1};
+    _movesPatterns.emplace_back(std::make_pair(1, thisSuck5));
 }
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
@@ -175,45 +193,37 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy,
     Bits400& bits = isPlayer ? board.player : board.opponent;
     Bits400& opponentBits = isPlayer ? board.opponent : board.player;
 
-    int potentialLineLength = 0;
-    int stonesAligned = 0;
-    bool spaceForWin = false;
+    std::array<int, 9> tableNow = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int valMax = 0;
 
-    for (int i = 0; i < 5; ++i) {
-        if (!isInBounds(x + i * dx, y + i * dy) || opponentBits.test(x + i * dx, y + i * dy)) {
-            break;
+    for (int i = -4; i < 5; i++) {
+        if (!isInBounds(x + i * dx, y + i * dy)) {
+            continue;
         }
-        if (bits.test(x + i * dx, y + i * dy)) {
-            stonesAligned++;
-        }
-        potentialLineLength++;
-    }
-
-    for (int i = 1; i < 5; ++i) {
-        if (!isInBounds(x - i * dx, y - i * dy) || opponentBits.test(x - i * dx, y - i * dy)) {
-            break;
-        }
-        if (bits.test(x - i * dx, y - i * dy)) {
-            stonesAligned++;
-        }
-        potentialLineLength++;
-    }
-
-    if (potentialLineLength >= 5) {
-        spaceForWin = true;
-    }
-
-    if (spaceForWin) {
-        switch (stonesAligned) {
-            case 5: return _scoreLookupTab[ScoreKey(5, 0)];
-            case 4: return _scoreLookupTab[ScoreKey(4, 0)];
-            case 3: return _scoreLookupTab[ScoreKey(3, 0)];
-            case 2: return _scoreLookupTab[ScoreKey(2, 0)];
-            case 1: return _scoreLookupTab[ScoreKey(1, 0)];
-            default: break;
+        if (opponentBits.test(x + i * dx, y + i * dy)) {
+            tableNow[i + 4] = 2;
+        } else if (bits.test(x + i * dx, y + i * dy)) {
+            tableNow[i + 4] = 1;
         }
     }
-
-    return 0;
+    for (int i = 0; i < 9; i++) {
+        for (const auto &pattern : _movesPatterns) {
+            if (i + pattern.second.size() >= 9) {
+                continue;
+            }
+            bool match = true;
+            int curIndex = i;
+            for (const auto &value : pattern.second) {
+                if (tableNow[curIndex] != value) {
+                    match = false;
+                    break;
+                }
+                curIndex++;
+            }
+            if (match) {
+                valMax = std::max(valMax, pattern.first);
+            }
+        }
+    }
+    return valMax;
 }
-
