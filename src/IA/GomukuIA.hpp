@@ -5,7 +5,6 @@
 #pragma once
 
 #include "GomukuBoard.hpp"
-#include "PatterMatcher.hpp"
 #include <vector>
 #include <utility>
 #include <cmath>
@@ -40,7 +39,6 @@ public:
 private:
     int _maxDepth;
     std::unordered_map<ScoreKey, int> _scoreLookupTab;
-    std::vector<std::pair<PatternMatcher, int>> _patternMatchers;
 
     std::pair<int, std::pair<int, int>> findBestMoveThread(GomukuBoard &board, int depth, const std::vector<std::pair<int, int>> &moves);
 

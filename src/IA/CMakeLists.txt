@@ -10,5 +10,4 @@ target_sources(
         ${PROJECT_NAME}
         PRIVATE
         GomukuIA.cpp
-        PatterMatcher.cpp
 )
