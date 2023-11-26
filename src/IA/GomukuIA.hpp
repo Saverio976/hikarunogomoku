@@ -16,7 +16,6 @@ public:
     std::pair<int, int> findBestMove(GomukuBoard& board);
 private:
     int _maxDepth;
-    std::vector<std::pair<int, std::vector<int>>> _movesPatterns;
 
     std::pair<int, std::pair<int, int>> findBestMoveThread(GomukuBoard &board, int depth, const std::vector<std::pair<int, int>> &moves);
 
@@ -29,4 +28,8 @@ private:
     int maxValue(GomukuBoard &board, int depth, int alpha, int beta);
 
     int minValue(GomukuBoard &board, int depth, int alpha, int beta);
+
+    // std::unordered_map<uint64_t, int> _transpositionTable;
+    // std::mutex _transpositionTableMutex;
+    // int _previousDepth = 4;
 };

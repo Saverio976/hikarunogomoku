@@ -10,26 +10,32 @@ std::unordered_map<Perfcounter::PerfType, Perfcounter::CounterStat> Perfcounter:
 Perfcounter::Counter::Counter(Perfcounter::PerfType type):
     _type(type)
 {
+#ifdef WITH_STAT
     Perfcounter::getCounter(type);
     _start = std::chrono::high_resolution_clock::now();
+#endif
 }
 
 Perfcounter::Counter::~Counter()
 {
+#ifdef WITH_STAT
     auto now = std::chrono::high_resolution_clock::now();
     Perfcounter::getCounter(_type).addCount(std::chrono::duration_cast<std::chrono::microseconds>(now - _start).count()); 
+#endif
 }
 
 Perfcounter::CounterStat::CounterStat()
 {
 }
 
-void Perfcounter::CounterStat::addCount(std::size_t count)
+void Perfcounter::CounterStat::addCount(std::size_t count /* unused */)
 {
+#ifdef WITH_STAT
     mean_count_add += count;
     mean_count_num++;
     max_count = std::max(max_count, count);
     min_count = std::min(min_count, count);
+#endif
 }
 
 std::double_t Perfcounter::CounterStat::getMeanCount() const
@@ -73,8 +79,9 @@ static std::string getPerfTypeString(Perfcounter::PerfType type)
     }
 }
 
-void Perfcounter::writeStats(const std::string &filename)
+void Perfcounter::writeStats(const std::string &filename /* unused */)
 {
+#ifdef WITH_STAT
     std::ofstream file(filename);
 
     if (!file.good() || file.bad() || !file.is_open()) {
@@ -88,4 +95,5 @@ void Perfcounter::writeStats(const std::string &filename)
         file << "--- Number of samples: " << it.second.getNumSample() << std::endl;
         file << std::endl;
     }
+#endif
 }
