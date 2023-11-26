@@ -19,6 +19,34 @@ project(
     LANGUAGES CXX
 )
 
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag(-funroll-loops HAS_UNROLL_LOOPS)
+if (HAS_UNROLL_LOOPS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -funroll-loops")
+    message(STATUS "unroll-loops")
+endif()
+check_cxx_compiler_flag(-march=native HAS_MARCH_NATIVE)
+if (HAS_MARCH_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+    message(STATUS "march=native")
+endif()
+check_cxx_compiler_flag(-mfpmath=sse HAS_FPMATH_SSE)
+if (HAS_FPMATH_SSE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpmath=sse")
+    message(STATUS "mfpmath=sse")
+endif()
+check_cxx_compiler_flag(-ftree-vectorize HAS_FTREE_VECTORIZE)
+if (HAS_FTREE_VECTORIZE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftree-vectorize")
+    message(STATUS "ftree-vectorize")
+endif()
+check_cxx_compiler_flag("/GL" HAS_GL)
+if (HAS_GL)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GL")
+    message(STATUS "/GL")
+endif()
+
+
 if (BUILD_STATIC)
     if (MSVC)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -28,6 +56,7 @@ if (BUILD_STATIC)
         set(CMAKE_EXE_LINKER_FLAGS "-static")
     endif()
 endif()
+
 
 add_executable(${PROJECT_NAME})
 
