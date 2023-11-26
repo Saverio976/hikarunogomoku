@@ -18,11 +18,10 @@ public:
 private:
     int _maxDepth;
     ThreadPool _pool;
-    std::vector<std::pair<int, std::vector<int>>> _movesPatterns;
 
     std::pair<int, std::pair<int, int>> findBestMoveThread(GomukuBoard &board, int depth, const std::vector<std::pair<int, int>> &moves);
 
-    inline int evaluateBoard(const GomukuBoard&);
+    inline int evaluateBoard(const GomukuBoard &);
 
     int evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy);
 

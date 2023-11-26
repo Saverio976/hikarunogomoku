@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <functional>
 #include <future>
 #include <vector>
@@ -24,23 +25,27 @@ class ThreadPool {
         using return_type = typename std::invoke_result<F, Args...>::type;
 
         auto task = std::make_shared<std::packaged_task<return_type()>>(
-                std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+            std::bind(std::forward<F>(f), std::forward<Args>(args)...)
         );
 
         std::future<return_type> res = task->get_future();
         {
-            std::unique_lock<std::mutex> lock(queue_mutex);
-            tasks.emplace([task](){ (*task)(); });
+            std::unique_lock<std::mutex> lock(_queue_mutex);
+            _tasks.emplace([task](){ (*task)(); });
         }
-        condition.notify_one();
+        _condition.notify_one();
         return res;
     }
 
-private:
-    std::vector<std::thread> workers;
-    std::queue<std::function<void()>> tasks;
+    std::size_t getNumThreads() const;
 
-    std::mutex queue_mutex;
-    std::condition_variable condition;
-    bool stop;
+private:
+    std::vector<std::thread> _workers;
+    std::queue<std::function<void()>> _tasks;
+
+    std::mutex _queue_mutex;
+    std::condition_variable _condition;
+    bool _stop;
+
+    std::size_t _numThreads;
 };

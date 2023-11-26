@@ -1,0 +1,40 @@
+name: Test Perf
+
+on: [pull_request]
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Setup CPP
+        uses: aminya/setup-cpp@v1
+        with:
+          compiler: gcc
+          cmake: true
+          ninja: true
+          make: true
+          vcpkg: false
+          cppcheck: true
+          clangtidy: true
+
+      - name: Perf
+        run: ./tools/test-perf/test.sh > perf.log
+
+      - name: Upload Perf
+        uses: actions/upload-artifact@v3
+        with:
+          name: perf
+          path: perf.log
+
+      - name: Comment
+        uses: mshick/add-pr-comment@v2
+        if: always()
+        with:
+          message-path: |
+            perf.log

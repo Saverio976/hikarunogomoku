@@ -8,57 +8,53 @@
 #include "GomukuBoard.hpp"
 #include "Perfcounter.hpp"
 
-GomukuAI::GomukuAI(int depth) : _maxDepth(depth), _pool(5)
+static constexpr int NB_PATTERNS = 32;
+static const std::array<std::pair<int, std::vector<int>>, NB_PATTERNS> s_movesPatterns = {{
+    {100, {1, 1, 1, 1, 1}},
+    {95, {0, 1, 1, 1, 1, 0}},
+
+    {80, {0, 1, 1, 1, 1}},
+    {80, {1, 0, 1, 1, 1}},
+    {80, {1, 1, 0, 1, 1}},
+    {80, {1, 1, 1, 0, 1}},
+    {80, {1, 1, 1, 1, 0}},
+
+    {50, {0, 0, 1, 1, 1, 0}},
+    {50, {0, 1, 1, 1, 0, 0}},
+
+    {45, {0, 1, 1, 1, 0}},
+
+    {40, {0, 0, 1, 1, 1}},
+    {40, {1, 1, 1, 0, 0}},
+
+    {30, {1, 1, 0, 1, 0}},
+    {30, {0, 1, 0, 1, 1}},
+    {30, {1, 0, 0, 1, 1}},
+    {30, {1, 1, 0, 0, 1}},
+    {30, {1, 0, 1, 0, 1}},
+
+    {20, {0, 0, 1, 1, 0, 0}},
+
+    {15, {0, 1, 1, 0, 0}},
+    {15, {0, 0, 1, 1, 0}},
+
+    {10, {1, 1, 0, 0, 0}},
+    {10, {0, 0, 0, 1, 1}},
+    {10, {0, 1, 1, 0, 0}},
+    {10, {0, 0, 1, 1, 0}},
+    {10, {1, 0, 1, 0, 0}},
+    {10, {0, 1, 0, 1, 0}},
+    {10, {0, 0, 1, 0, 1}},
+
+    {1, {1, 0, 0, 0, 0}},
+    {1, {0, 1, 0, 0, 0}},
+    {1, {0, 0, 1, 0, 0}},
+    {1, {0, 0, 0, 1, 0}},
+    {1, {0, 0, 0, 0, 1}}
+}};
+
+GomukuAI::GomukuAI(int depth) : _maxDepth(depth), _pool(3)
 {
-    std::vector<int> win = {1, 1, 1, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(100, win));
-    std::vector<int> nextIsWin = {0, 1, 1, 1, 1, 0};
-    _movesPatterns.emplace_back(std::make_pair(95, nextIsWin));
-
-    std::vector<int> nextIsNotSureWin = {0, 1, 1, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin));
-    std::vector<int> nextIsNotSureWin2 = {1, 1, 1, 1, 0};
-    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin2));
-    std::vector<int> nextIsNotSureWin3 = {1, 1, 1, 0, 1};
-    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin3));
-    std::vector<int> nextIsNotSureWin4 = {1, 1, 0, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin4));
-    std::vector<int> nextIsNotSureWin5 = {1, 0, 1, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin5));
-
-    std::vector<int> nextIsNotWinButOk = {0, 0, 1, 1, 1, 0};
-    _movesPatterns.emplace_back(std::make_pair(50, nextIsNotWinButOk));
-    std::vector<int> nextIsNotWinButOk2 = {0, 1, 1, 1, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(50, nextIsNotWinButOk2));
-
-    std::vector<int> nextIsNotWinButOk3 = {0, 0, 1, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(40, nextIsNotWinButOk3));
-    std::vector<int> nextIsNotWinButOk4 = {1, 1, 1, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(40, nextIsNotWinButOk4));
-
-    std::vector<int> stillPlaceForWin = {0, 0, 1, 1, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(20, stillPlaceForWin));
-    std::vector<int> stillPlaceForWinNButLess = {0, 1, 1, 0, 0};
-
-    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLess));
-    std::vector<int> stillPlaceForWinNButLess2 = {0, 0, 1, 1, 0};
-    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLess2));
-
-    std::vector<int> stillPlaceForWinNButLessLess = {1, 1, 0, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLessLess));
-    std::vector<int> stillPlaceForWinNButLessLess2 = {0, 0, 0, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLessLess2));
-
-    std::vector<int> thisSuck = {1, 0, 0, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(1, thisSuck));
-    std::vector<int> thisSuck2 = {0, 1, 0, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(1, thisSuck2));
-    std::vector<int> thisSuck3 = {0, 0, 1, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(1, thisSuck3));
-    std::vector<int> thisSuck4 = {0, 0, 0, 1, 0};
-    _movesPatterns.emplace_back(std::make_pair(1, thisSuck4));
-    std::vector<int> thisSuck5 = {0, 0, 0, 0, 1};
-    _movesPatterns.emplace_back(std::make_pair(1, thisSuck5));
 }
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
@@ -86,29 +82,27 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
 
 std::pair<int, std::pair<int, int>> GomukuAI::findBestMoveThread(GomukuBoard &board, int depth, const std::vector<std::pair<int, int>> &moves)
 {
-    GomukuBoard boardCopy = board;
-
     int bestScore = std::numeric_limits<int>::min();
     std::pair<int, int> bestMove = {-1, -1};
     int int_min = std::numeric_limits<int>::min();
     int int_max = std::numeric_limits<int>::max();
 
     for (const auto &move : moves) {
-        boardCopy.set(move.first, move.second, false);
-        if (boardCopy.hasFiveInARow(boardCopy.opponent)) {
+        board.set(move.first, move.second, false);
+        if (board.hasFiveInARow(board.opponent)) {
             bestScore = int_max - 100;
             bestMove = move;
-            boardCopy.reset(move.first, move.second);
+            board.reset(move.first, move.second);
             continue;
         }
-        boardCopy.reset(move.first, move.second);
-        boardCopy.set(move.first, move.second, true);
-        if (boardCopy.hasFiveInARow(board.player)) {
-            boardCopy.reset(move.first, move.second);
+        board.reset(move.first, move.second);
+        board.set(move.first, move.second, true);
+        if (board.hasFiveInARow(board.player)) {
+            board.reset(move.first, move.second);
             return {int_max, move};
         }
         int moveScore = minValue(board, depth - 1, int_min, int_max);
-        boardCopy.reset(move.first, move.second);
+        board.reset(move.first, move.second);
 
         if (moveScore > bestScore) {
             bestScore = moveScore;
@@ -128,22 +122,25 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
         return moves[0];
     }
 
-    std::size_t nb_thread = 5;
+    std::size_t nb_thread = _pool.getNumThreads() * 3;
     std::size_t slice_number = moves.size() / nb_thread;
-    std::vector<std::thread> threads;
-    std::mutex mutexBest;
 
     int depth = moves.size() > 30 ? 3 : 4;
+    if (moves.size() > 50) {
+        depth = 2;
+    }
 
     std::vector<std::future<std::pair<int, std::pair<int, int>>>> futures;
 
     for (std::size_t i = 0; i < nb_thread; ++i) {
         auto slice_start = (i == 0) ? moves.begin() : moves.begin() + (i * slice_number);
         auto slice_end = (i == nb_thread - 1) ? moves.end() : moves.begin() + ((i + 1) * slice_number);
+        std::unique_ptr<GomukuBoard> boardCopy = std::make_unique<GomukuBoard>(board);
+        std::unique_ptr<std::vector<std::pair<int, int>>> movesCopy = std::make_unique<std::vector<std::pair<int, int>>>(slice_start, slice_end);
         futures.emplace_back(
-                _pool.enqueue([this, &board, depth, slice_start, slice_end]() {
-                    return findBestMoveThread(board, depth, std::vector<std::pair<int, int>>(slice_start, slice_end));
-                })
+            _pool.enqueue([this, boardCopy = std::move(boardCopy), depth, movesCopy = std::move(movesCopy)]() {
+                return findBestMoveThread(*boardCopy, depth, *movesCopy);
+            })
         );
     }
 
@@ -157,7 +154,8 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
     return bestMove;
 }
 
-int GomukuAI::maxValue(GomukuBoard &board, int depth, int alpha, int beta) {
+int GomukuAI::maxValue(GomukuBoard &board, int depth, int alpha, int beta)
+{
     if (depth == 0 || board.isGameOver()) {
         return evaluateBoard(board);
     }
@@ -197,7 +195,8 @@ bool GomukuAI::isInBounds(int x, int y) {
     return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
 }
 
-int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy) {
+int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy)
+{
     Bits400& bits = board.player;
     Bits400& opponentBits = board.opponent;
 
@@ -219,7 +218,7 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy)
         }
     }
     for (int i = 0; i < 9; i++) {
-        for (const auto &pattern : _movesPatterns) {
+        for (const auto &pattern : s_movesPatterns) {
             if (i + pattern.second.size() >= 9) {
                 continue;
             }
@@ -246,5 +245,5 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy)
             }
         }
     }
-    return valPlayer - valOpponent;
+    return valPlayer - (valOpponent * 2);
 }

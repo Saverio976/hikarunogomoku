@@ -4,21 +4,25 @@
 
 #include "ThreadPool.hpp"
 
-ThreadPool::ThreadPool(size_t numThreads) : stop(false) {
+ThreadPool::ThreadPool(size_t numThreads):
+    _stop(false),
+    _numThreads(numThreads)
+{
     for (size_t i = 0; i < numThreads; ++i) {
-        workers.emplace_back([this] {
+        _workers.emplace_back([this] {
             while (true) {
                 std::function<void()> task;
 
                 {
-                    std::unique_lock<std::mutex> lock(this->queue_mutex);
-                    this->condition.wait(lock, [this] {
-                        return this->stop || !this->tasks.empty();
+                    std::unique_lock<std::mutex> lock(this->_queue_mutex);
+                    this->_condition.wait(lock, [this] {
+                        return this->_stop || !this->_tasks.empty();
                     });
-                    if (this->stop && this->tasks.empty())
+                    if (this->_stop && this->_tasks.empty()) {
                         return;
-                    task = std::move(this->tasks.front());
-                    this->tasks.pop();
+                    }
+                    task = std::move(this->_tasks.front());
+                    this->_tasks.pop();
                 }
 
                 task();
@@ -27,12 +31,19 @@ ThreadPool::ThreadPool(size_t numThreads) : stop(false) {
     }
 }
 
-ThreadPool::~ThreadPool() {
+ThreadPool::~ThreadPool()
+{
     {
-        std::unique_lock<std::mutex> lock(queue_mutex);
-        stop = true;
+        std::unique_lock<std::mutex> lock(_queue_mutex);
+        _stop = true;
     }
-    condition.notify_all();
-    for (std::thread &worker: workers)
+    _condition.notify_all();
+    for (std::thread &worker : _workers) {
         worker.join();
+    }
+}
+
+std::size_t ThreadPool::getNumThreads() const
+{
+    return _numThreads;
 }
