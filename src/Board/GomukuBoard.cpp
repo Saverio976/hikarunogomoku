@@ -72,7 +72,7 @@ bool GomukuBoard::isFirstMove() const {
 }
 
 bool GomukuBoard::isGameOver() const {
-    if (hasFiveInARow(player) || hasFiveInARow(opponent)) {
+    if (hasFiveInARow(player, opponent)) {
         return true;
     }
 
@@ -86,7 +86,8 @@ bool GomukuBoard::isGameOver() const {
     return true;
 }
 
-bool GomukuBoard::hasFiveInARow(const Bits400& bits) const {
+bool GomukuBoard::hasFiveInARow(const Bits400& bits) const
+{
     for (int x = _minX; x <= _maxX; ++x) {
         for (int y = _minY; y <= _maxY; ++y) {
             if (checkDirection(bits, x, y, 1, 0) ||
@@ -100,7 +101,23 @@ bool GomukuBoard::hasFiveInARow(const Bits400& bits) const {
     return false;
 }
 
-bool GomukuBoard::checkDirection(const Bits400& bits, int x, int y, int dx, int dy) const {
+bool GomukuBoard::hasFiveInARow(const Bits400& bits, const Bits400& bits2) const
+{
+    for (int x = _minX; x <= _maxX; ++x) {
+        for (int y = _minY; y <= _maxY; ++y) {
+            if (checkDirection(bits, bits2, x, y, 1, 0) ||
+                checkDirection(bits, bits2, x, y, 0, 1) ||
+                checkDirection(bits, bits2, x, y, 1, 1) ||
+                checkDirection(bits, bits2, x, y, 1, -1)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool GomukuBoard::checkDirection(const Bits400& bits, int x, int y, int dx, int dy) const
+{
     int count = 0;
 
     while (isInBounds(x, y) && bits.test(x, y) && count < 5) {
@@ -112,6 +129,31 @@ bool GomukuBoard::checkDirection(const Bits400& bits, int x, int y, int dx, int 
     return count == 5;
 }
 
+bool GomukuBoard::checkDirection(const Bits400& bits, const Bits400& bits2, int x, int y, int dx, int dy) const
+{
+    int count = 0;
+    int x_tmp = x;
+    int y_tmp = y;
+
+    while (isInBounds(x, y) && bits.test(x, y) && count < 5) {
+        count++;
+        x += dx;
+        y += dy;
+    }
+    if (count == 5) {
+        return true;
+    }
+    count = 0;
+    x = x_tmp;
+    y = y_tmp;
+    while (isInBounds(x, y) && bits2.test(x, y) && count < 5) {
+        count++;
+        x += dx;
+        y += dy;
+    }
+
+    return count == 5;
+}
 
 bool GomukuBoard::isInBounds(int x, int y) const {
     return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;

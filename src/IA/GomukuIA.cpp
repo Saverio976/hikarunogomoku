@@ -10,14 +10,14 @@
 
 static constexpr int NB_PATTERNS = 32;
 static const std::array<std::pair<int, std::vector<int>>, NB_PATTERNS> s_movesPatterns = {{
-    {100, {1, 1, 1, 1, 1}},
-    {95, {0, 1, 1, 1, 1, 0}},
+    {300, {1, 1, 1, 1, 1}},
+    {250, {0, 1, 1, 1, 1, 0}},
 
-    {80, {0, 1, 1, 1, 1}},
-    {80, {1, 0, 1, 1, 1}},
-    {80, {1, 1, 0, 1, 1}},
-    {80, {1, 1, 1, 0, 1}},
-    {80, {1, 1, 1, 1, 0}},
+    {180, {0, 1, 1, 1, 1}},
+    {180, {1, 0, 1, 1, 1}},
+    {180, {1, 1, 0, 1, 1}},
+    {180, {1, 1, 1, 0, 1}},
+    {180, {1, 1, 1, 1, 0}},
 
     {50, {0, 0, 1, 1, 1, 0}},
     {50, {0, 1, 1, 1, 0, 0}},
@@ -125,7 +125,7 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
     std::size_t nb_thread = _pool.getNumThreads() * 3;
     std::size_t slice_number = moves.size() / nb_thread;
 
-    int depth = moves.size() > 30 ? 3 : 4;
+    int depth = moves.size() > 25 ? 3 : 4;
     if (moves.size() > 50) {
         depth = 2;
     }
@@ -238,10 +238,12 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy)
                 curIndex++;
             }
             if (matchOpponent) {
-                valOpponent = std::max(valOpponent, pattern.first);
+                // valOpponent = std::max(valOpponent, pattern.first);
+                valOpponent += pattern.first;
             }
             if (matchPlayer) {
-                valPlayer = std::max(valPlayer, pattern.first);
+                // valPlayer = std::max(valPlayer, pattern.first);
+                valPlayer += pattern.first;
             }
         }
     }
