@@ -53,7 +53,7 @@ static const std::array<std::pair<int, std::vector<int>>, NB_PATTERNS> s_movesPa
     {1, {0, 0, 0, 0, 1}}
 }};
 
-GomukuAI::GomukuAI(int depth) : _maxDepth(depth), _pool(3)
+GomukuAI::GomukuAI(int depth) : _maxDepth(depth), _pool(5)
 {
 }
 
