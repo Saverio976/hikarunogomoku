@@ -29,4 +29,8 @@ private:
     int maxValue(GomukuBoard &board, int depth, int alpha, int beta);
 
     int minValue(GomukuBoard &board, int depth, int alpha, int beta);
+
+    std::unordered_map<uint64_t, int> _transpositionTable;
+    std::mutex _transpositionTableMutex;
+    int _previousDepth = 4;
 };

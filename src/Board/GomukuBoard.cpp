@@ -4,11 +4,22 @@
 
 #include "GomukuBoard.hpp"
 
+GomukuBoard::GomukuBoard() : player(), opponent(), _currentHash(0), _minX(BOARD_SIZE), _minY(BOARD_SIZE), _maxX(0), _maxY(0) {
+    initializeZobristTable();
+    _currentHash = computeHash();
+}
+
+uint64_t GomukuBoard::getHash() const {
+    return _currentHash;
+}
+
 void GomukuBoard::set(int x, int y, bool isPlayer) {
     if (isPlayer) {
         player.set(x, y);
+        _currentHash ^= _playerZobristTable[x][y];
     } else {
         opponent.set(x, y);
+        _currentHash ^= _opponentZobristTable[x][y];
     }
     if (_minX > x) _minX = x;
     if (_maxX < x) _maxX = x;
@@ -17,6 +28,13 @@ void GomukuBoard::set(int x, int y, bool isPlayer) {
 }
 
 void GomukuBoard::reset(int x, int y) {
+    if (player.test(x, y)) {
+        _currentHash ^= _playerZobristTable[x][y];
+    }
+    if (opponent.test(x, y)) {
+        _currentHash ^= _opponentZobristTable[x][y];
+    }
+
     player.reset(x, y);
     opponent.reset(x, y);
     if (x == _minX || x == _maxX || y == _minY || y == _maxY) {
@@ -143,4 +161,31 @@ int GomukuBoard::getMinY() const {
 
 int GomukuBoard::getMaxY() const {
     return _maxY;
+}
+
+void GomukuBoard::initializeZobristTable() {
+    std::mt19937_64 rng(std::random_device{}());
+    std::uniform_int_distribution<uint64_t> dist;
+
+    for (int x = 0; x < BOARD_SIZE; ++x) {
+        for (int y = 0; y < BOARD_SIZE; ++y) {
+            _playerZobristTable[x][y] = dist(rng);
+            _opponentZobristTable[x][y] = dist(rng);
+        }
+    }
+}
+
+uint64_t GomukuBoard::computeHash() const {
+    uint64_t hash = 0;
+    for (int x = 0; x < BOARD_SIZE; ++x) {
+        for (int y = 0; y < BOARD_SIZE; ++y) {
+            if (player.test(x, y)) {
+                hash ^= _playerZobristTable[x][y];
+            }
+            if (opponent.test(x, y)) {
+                hash ^= _opponentZobristTable[x][y];
+            }
+        }
+    }
+    return hash;
 }
