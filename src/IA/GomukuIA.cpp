@@ -86,34 +86,35 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
 
 std::pair<int, std::pair<int, int>> GomukuAI::findBestMoveThread(GomukuBoard &board, int depth, const std::vector<std::pair<int, int>> &moves)
 {
+    GomukuBoard boardCopy = board;
+
     int bestScore = std::numeric_limits<int>::min();
     std::pair<int, int> bestMove = {-1, -1};
     int int_min = std::numeric_limits<int>::min();
     int int_max = std::numeric_limits<int>::max();
 
     for (const auto &move : moves) {
-        board.set(move.first, move.second, false);
-        if (board.hasFiveInARow(board.opponent)) {
+        boardCopy.set(move.first, move.second, false);
+        if (boardCopy.hasFiveInARow(boardCopy.opponent)) {
             bestScore = int_max - 100;
             bestMove = move;
-            board.reset(move.first, move.second);
+            boardCopy.reset(move.first, move.second);
             continue;
         }
-        board.reset(move.first, move.second);
-        board.set(move.first, move.second, true);
-        if (board.hasFiveInARow(board.player)) {
-            board.reset(move.first, move.second);
+        boardCopy.reset(move.first, move.second);
+        boardCopy.set(move.first, move.second, true);
+        if (boardCopy.hasFiveInARow(board.player)) {
+            boardCopy.reset(move.first, move.second);
             return {int_max, move};
         }
         int moveScore = minValue(board, depth - 1, int_min, int_max);
-        board.reset(move.first, move.second);
+        boardCopy.reset(move.first, move.second);
 
         if (moveScore > bestScore) {
             bestScore = moveScore;
             bestMove = move;
         }
     }
-    std::cout << "Thread best Move & Score: " << bestMove.first << " " << bestMove.second << " " << bestScore << std::endl;
     return {bestScore, bestMove};
 }
 
@@ -139,19 +140,15 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
     for (std::size_t i = 0; i < nb_thread; ++i) {
         auto slice_start = (i == 0) ? moves.begin() : moves.begin() + (i * slice_number);
         auto slice_end = (i == nb_thread - 1) ? moves.end() : moves.begin() + ((i + 1) * slice_number);
-        std::vector<std::pair<int, int>> movesThread(slice_start, slice_end);
-        auto boardCopy = board;
-
         futures.emplace_back(
-                _pool.enqueue([this, &boardCopy, depth, slice_start, slice_end]() {
-                    return findBestMoveThread(boardCopy, depth, std::vector<std::pair<int, int>>(slice_start, slice_end));
+                _pool.enqueue([this, &board, depth, slice_start, slice_end]() {
+                    return findBestMoveThread(board, depth, std::vector<std::pair<int, int>>(slice_start, slice_end));
                 })
         );
     }
 
     for (auto &future : futures) {
         auto result = future.get();
-        std::cout << "Thread FINAL best Move & Score: " << result.second.first << " " << result.second.second << " " << result.first << std::endl;
         if (result.first > bestScore) {
             bestScore = result.first;
             bestMove = result.second;
