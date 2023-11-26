@@ -59,14 +59,14 @@ GomukuAI::GomukuAI(int depth) : _maxDepth(depth)
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
 {
-    uint64_t hash = board.computeHash();
-    {
-        std::lock_guard<std::mutex> lock(_transpositionTableMutex);
-
-        if (_transpositionTable.find(hash) != _transpositionTable.end()) {
-            return _transpositionTable[hash];
-        }
-    }
+    // uint64_t hash = board.computeHash();
+    // {
+    //     std::lock_guard<std::mutex> lock(_transpositionTableMutex);
+    //
+    //     if (_transpositionTable.find(hash) != _transpositionTable.end()) {
+    //         return _transpositionTable[hash];
+    //     }
+    // }
 
     int score = 0;
     Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
@@ -86,8 +86,8 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
             score += evaluateDirection(board, x, y, 1, -1);
         }
     }
-    std::lock_guard<std::mutex> lock(_transpositionTableMutex);
-    _transpositionTable[hash] = score;
+    // std::lock_guard<std::mutex> lock(_transpositionTableMutex);
+    // _transpositionTable[hash] = score;
     return score;
 }
 
@@ -140,10 +140,10 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
 
     int depth = moves.size() > 30 ? 3 : 4;
 
-    if (depth < _previousDepth) {
-        _transpositionTable.clear();
-    }
-    _previousDepth = depth;
+    // if (depth < _previousDepth) {
+    //     _transpositionTable.clear();
+    // }
+    // _previousDepth = depth;
 
     for (std::size_t i = 0; i < nb_thread; ++i) {
         std::size_t start_i = i * slice_number;
