@@ -5,6 +5,7 @@
 #pragma once
 
 #include "GomukuBoard.hpp"
+#include "ThreadPool.hpp"
 #include <vector>
 #include <utility>
 #include <cmath>
@@ -16,6 +17,7 @@ public:
     std::pair<int, int> findBestMove(GomukuBoard& board);
 private:
     int _maxDepth;
+    ThreadPool _pool;
     std::vector<std::pair<int, std::vector<int>>> _movesPatterns;
 
     std::pair<int, std::pair<int, int>> findBestMoveThread(GomukuBoard &board, int depth, const std::vector<std::pair<int, int>> &moves);

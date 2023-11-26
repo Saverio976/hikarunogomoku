@@ -8,7 +8,7 @@
 #include "GomukuBoard.hpp"
 #include "Perfcounter.hpp"
 
-GomukuAI::GomukuAI(int depth) : _maxDepth(depth)
+GomukuAI::GomukuAI(int depth) : _maxDepth(depth), _pool(5)
 {
     std::vector<int> win = {1, 1, 1, 1, 1};
     _movesPatterns.emplace_back(std::make_pair(100, win));
@@ -128,34 +128,27 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
 
     int depth = moves.size() > 30 ? 3 : 4;
 
+    std::vector<std::future<std::pair<int, std::pair<int, int>>>> futures;
+
     for (std::size_t i = 0; i < nb_thread; ++i) {
         std::size_t start_i = i * slice_number;
         std::size_t end_i = (i + 1) * slice_number;
         auto slice_start = (i == 0) ? moves.begin() : moves.begin() + (i * slice_number);
         auto slice_end = (i == nb_thread - 1) ? moves.end() : moves.begin() + ((i + 1) * slice_number);
         std::vector<std::pair<int, int>> movesThread(slice_start, slice_end);
-        threads.push_back(
-            std::thread(
-                [this, &board, depth, &mutexBest, &bestScore, &bestMove, movesThread]() {
-                    auto boardThread = board;
-                    auto best = findBestMoveThread(
-                        boardThread,
-                        depth,
-                        movesThread
-                    );
-                    mutexBest.lock();
-                    if (best.first > bestScore) {
-                        bestScore = best.first;
-                        bestMove = best.second;
-                    }
-                    mutexBest.unlock();
-                }
-            )
+        futures.emplace_back(
+                _pool.enqueue([this, &board, depth, slice_start, slice_end]() {
+                    return findBestMoveThread(board, depth, std::vector<std::pair<int, int>>(slice_start, slice_end));
+                })
         );
     }
 
-    for (auto &thread : threads) {
-        thread.join();
+    for (auto &future : futures) {
+        auto result = future.get();
+        if (result.first > bestScore) {
+            bestScore = result.first;
+            bestMove = result.second;
+        }
     }
     return bestMove;
 }
