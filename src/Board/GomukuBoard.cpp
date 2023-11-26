@@ -5,6 +5,7 @@
 #include "GomukuBoard.hpp"
 
 GomukuBoard::GomukuBoard() : player(), opponent(), _minX(BOARD_SIZE), _minY(BOARD_SIZE), _maxX(0), _maxY(0) {
+    initializeZobristTable();
 }
 
 void GomukuBoard::set(int x, int y, bool isPlayer) {
@@ -148,23 +149,29 @@ int GomukuBoard::getMaxY() const {
     return _maxY;
 }
 
-int GomukuBoard::computeHash() const {
-    int hash = 0;
-    int base = 1;
-    int value = 0;
-
+uint64_t GomukuBoard::computeHash() const {
+    uint64_t hash = 0;
     for (int x = 0; x < BOARD_SIZE; ++x) {
         for (int y = 0; y < BOARD_SIZE; ++y) {
             if (player.test(x, y)) {
-                value = 1;
-            } else if (opponent.test(x, y)) {
-                value = 2;
-            } else {
-                value = 0;
+                hash ^= _playerZobristTable[x][y];
             }
-            hash += base * value;
-            base *= 3;
+            if (opponent.test(x, y)) {
+                hash ^= _opponentZobristTable[x][y];
+            }
         }
     }
     return hash;
+}
+
+void GomukuBoard::initializeZobristTable() {
+    std::mt19937_64 rng(std::random_device{}());
+    std::uniform_int_distribution<uint64_t> dist;
+
+    for (int x = 0; x < BOARD_SIZE; ++x) {
+        for (int y = 0; y < BOARD_SIZE; ++y) {
+            _playerZobristTable[x][y] = dist(rng);
+            _opponentZobristTable[x][y] = dist(rng);
+        }
+    }
 }

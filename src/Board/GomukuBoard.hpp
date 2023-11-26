@@ -35,7 +35,7 @@ public:
 
     bool hasFiveInARow(const Bits400& bits) const;
 
-    int computeHash() const;
+    uint64_t computeHash() const;
 
 private:
     bool isFirstMove() const;
@@ -55,6 +55,12 @@ private:
     bool checkDirection(const Bits400& bits, int x, int y, int dx, int dy) const;
 
     bool isInBounds(int x, int y) const;
+
+    void initializeZobristTable();
+
+    std::array<std::array<uint64_t, BOARD_SIZE>, BOARD_SIZE> _playerZobristTable;
+    std::array<std::array<uint64_t, BOARD_SIZE>, BOARD_SIZE> _opponentZobristTable;
+
     int _minX;
     int _minY;
     int _maxX;

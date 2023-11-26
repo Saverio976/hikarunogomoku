@@ -59,7 +59,7 @@ GomukuAI::GomukuAI(int depth) : _maxDepth(depth)
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
 {
-    /**int hash = board.computeHash();
+    uint64_t hash = board.computeHash();
     {
         std::lock_guard<std::mutex> lock(_transpositionTableMutex);
 
@@ -67,7 +67,6 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
             return _transpositionTable[hash];
         }
     }
-    **/
 
     int score = 0;
     Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
@@ -87,10 +86,8 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
             score += evaluateDirection(board, x, y, 1, -1);
         }
     }
-    /**
     std::lock_guard<std::mutex> lock(_transpositionTableMutex);
     _transpositionTable[hash] = score;
-    **/
     return score;
 }
 
