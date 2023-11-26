@@ -37,7 +37,7 @@ class ThreadPool {
     }
 
 private:
-    std::vector<std::thread> workers;
+    std::vector<std::thread> _workers;
     std::queue<std::function<void()>> tasks;
 
     std::mutex queue_mutex;
