@@ -8,58 +8,53 @@
 #include "GomukuBoard.hpp"
 #include "Perfcounter.hpp"
 
+static constexpr int NB_PATTERNS = 32;
+static const std::array<std::pair<int, std::vector<int>>, NB_PATTERNS> s_movesPatterns = {{
+    {100, {1, 1, 1, 1, 1}},
+    {95, {0, 1, 1, 1, 1, 0}},
+
+    {80, {0, 1, 1, 1, 1}},
+    {80, {1, 0, 1, 1, 1}},
+    {80, {1, 1, 0, 1, 1}},
+    {80, {1, 1, 1, 0, 1}},
+    {80, {1, 1, 1, 1, 0}},
+
+    {50, {0, 0, 1, 1, 1, 0}},
+    {50, {0, 1, 1, 1, 0, 0}},
+
+    {45, {0, 1, 1, 1, 0}},
+
+    {40, {0, 0, 1, 1, 1}},
+    {40, {1, 1, 1, 0, 0}},
+
+    {30, {1, 1, 0, 1, 0}},
+    {30, {0, 1, 0, 1, 1}},
+    {30, {1, 0, 0, 1, 1}},
+    {30, {1, 1, 0, 0, 1}},
+    {30, {1, 0, 1, 0, 1}},
+
+    {20, {0, 0, 1, 1, 0, 0}},
+
+    {15, {0, 1, 1, 0, 0}},
+    {15, {0, 0, 1, 1, 0}},
+
+    {10, {1, 1, 0, 0, 0}},
+    {10, {0, 0, 0, 1, 1}},
+    {10, {0, 1, 1, 0, 0}},
+    {10, {0, 0, 1, 1, 0}},
+    {10, {1, 0, 1, 0, 0}},
+    {10, {0, 1, 0, 1, 0}},
+    {10, {0, 0, 1, 0, 1}},
+
+    {1, {1, 0, 0, 0, 0}},
+    {1, {0, 1, 0, 0, 0}},
+    {1, {0, 0, 1, 0, 0}},
+    {1, {0, 0, 0, 1, 0}},
+    {1, {0, 0, 0, 0, 1}}
+}};
+
 GomukuAI::GomukuAI(int depth) : _maxDepth(depth)
 {
-    std::vector<int> win = {1, 1, 1, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(100, win));
-    std::vector<int> nextIsWin = {0, 1, 1, 1, 1, 0};
-    _movesPatterns.emplace_back(std::make_pair(95, nextIsWin));
-
-    std::vector<int> nextIsNotSureWin = {0, 1, 1, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin));
-    std::vector<int> nextIsNotSureWin2 = {1, 1, 1, 1, 0};
-    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin2));
-    std::vector<int> nextIsNotSureWin3 = {1, 1, 1, 0, 1};
-    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin3));
-    std::vector<int> nextIsNotSureWin4 = {1, 1, 0, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin4));
-    std::vector<int> nextIsNotSureWin5 = {1, 0, 1, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(80, nextIsNotSureWin5));
-
-    std::vector<int> nextIsNotWinButOk = {0, 0, 1, 1, 1, 0};
-    _movesPatterns.emplace_back(std::make_pair(50, nextIsNotWinButOk));
-    std::vector<int> nextIsNotWinButOk2 = {0, 1, 1, 1, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(50, nextIsNotWinButOk2));
-
-    std::vector<int> nextIsNotWinButOk3 = {0, 0, 1, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(40, nextIsNotWinButOk3));
-    std::vector<int> nextIsNotWinButOk4 = {1, 1, 1, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(40, nextIsNotWinButOk4));
-
-
-    std::vector<int> stillPlaceForWin = {0, 0, 1, 1, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(20, stillPlaceForWin));
-    std::vector<int> stillPlaceForWinNButLess = {0, 1, 1, 0, 0};
-
-    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLess));
-    std::vector<int> stillPlaceForWinNButLess2 = {0, 0, 1, 1, 0};
-    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLess2));
-
-    std::vector<int> stillPlaceForWinNButLessLess = {1, 1, 0, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLessLess));
-    std::vector<int> stillPlaceForWinNButLessLess2 = {0, 0, 0, 1, 1};
-    _movesPatterns.emplace_back(std::make_pair(15, stillPlaceForWinNButLessLess2));
-
-    std::vector<int> thisSuck = {1, 0, 0, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(1, thisSuck));
-    std::vector<int> thisSuck2 = {0, 1, 0, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(1, thisSuck2));
-    std::vector<int> thisSuck3 = {0, 0, 1, 0, 0};
-    _movesPatterns.emplace_back(std::make_pair(1, thisSuck3));
-    std::vector<int> thisSuck4 = {0, 0, 0, 1, 0};
-    _movesPatterns.emplace_back(std::make_pair(1, thisSuck4));
-    std::vector<int> thisSuck5 = {0, 0, 0, 0, 1};
-    _movesPatterns.emplace_back(std::make_pair(1, thisSuck5));
 }
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
@@ -247,7 +242,7 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy)
         }
     }
     for (int i = 0; i < 9; i++) {
-        for (const auto &pattern : _movesPatterns) {
+        for (const auto &pattern : s_movesPatterns) {
             if (i + pattern.second.size() >= 9) {
                 continue;
             }

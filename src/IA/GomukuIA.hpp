@@ -16,7 +16,6 @@ public:
     std::pair<int, int> findBestMove(GomukuBoard& board);
 private:
     int _maxDepth;
-    std::vector<std::pair<int, std::vector<int>>> _movesPatterns;
 
     std::pair<int, std::pair<int, int>> findBestMoveThread(GomukuBoard &board, int depth, const std::vector<std::pair<int, int>> &moves);
 
