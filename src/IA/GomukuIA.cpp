@@ -31,6 +31,12 @@ GomukuAI::GomukuAI(int depth) : _maxDepth(depth)
     std::vector<int> nextIsNotWinButOk2 = {0, 1, 1, 1, 0, 0};
     _movesPatterns.emplace_back(std::make_pair(50, nextIsNotWinButOk2));
 
+    std::vector<int> nextIsNotWinButOk3 = {0, 0, 1, 1, 1};
+    _movesPatterns.emplace_back(std::make_pair(40, nextIsNotWinButOk3));
+    std::vector<int> nextIsNotWinButOk4 = {1, 1, 1, 0, 0};
+    _movesPatterns.emplace_back(std::make_pair(40, nextIsNotWinButOk4));
+
+
     std::vector<int> stillPlaceForWin = {0, 0, 1, 1, 0, 0};
     _movesPatterns.emplace_back(std::make_pair(20, stillPlaceForWin));
     std::vector<int> stillPlaceForWinNButLess = {0, 1, 1, 0, 0};
@@ -58,14 +64,15 @@ GomukuAI::GomukuAI(int depth) : _maxDepth(depth)
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
 {
-    /**
+    /**int hash = board.computeHash();
     {
         std::lock_guard<std::mutex> lock(_transpositionTableMutex);
-        if (_transpositionTable.find(board.getHash()) != _transpositionTable.end()) {
-            return _transpositionTable[board.getHash()];
+
+        if (_transpositionTable.find(hash) != _transpositionTable.end()) {
+            return _transpositionTable[hash];
         }
     }
-     **/
+    **/
 
     int score = 0;
     Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
@@ -87,8 +94,8 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
     }
     /**
     std::lock_guard<std::mutex> lock(_transpositionTableMutex);
-    _transpositionTable[board.getHash()] = score;
-        **/
+    _transpositionTable[hash] = score;
+    **/
     return score;
 }
 
@@ -267,5 +274,5 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy)
             }
         }
     }
-    return valPlayer - valOpponent;
+    return valPlayer - valOpponent * 2;
 }
