@@ -33,7 +33,8 @@ public:
     int getMinY() const;
     int getMaxY() const;
 
-    bool hasFiveInARow(const Bits400& bits) const;
+    bool hasFiveInARow(const Bits400 &bits) const;
+    bool hasFiveInARow(const Bits400 &bits, const Bits400 &bits2) const;
 
     uint64_t computeHash() const;
 
@@ -52,7 +53,8 @@ private:
 
     void recalculateCorners();
 
-    bool checkDirection(const Bits400& bits, int x, int y, int dx, int dy) const;
+    bool checkDirection(const Bits400 &bits, int x, int y, int dx, int dy) const;
+    bool checkDirection(const Bits400 &bits, const Bits400 &bits2, int x, int y, int dx, int dy) const;
 
     bool isInBounds(int x, int y) const;
 

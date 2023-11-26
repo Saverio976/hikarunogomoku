@@ -10,14 +10,14 @@
 
 static constexpr int NB_PATTERNS = 32;
 static const std::array<std::pair<int, std::vector<int>>, NB_PATTERNS> s_movesPatterns = {{
-    {100, {1, 1, 1, 1, 1}},
-    {95, {0, 1, 1, 1, 1, 0}},
+    {300, {1, 1, 1, 1, 1}},
+    {250, {0, 1, 1, 1, 1, 0}},
 
-    {80, {0, 1, 1, 1, 1}},
-    {80, {1, 0, 1, 1, 1}},
-    {80, {1, 1, 0, 1, 1}},
-    {80, {1, 1, 1, 0, 1}},
-    {80, {1, 1, 1, 1, 0}},
+    {180, {0, 1, 1, 1, 1}},
+    {180, {1, 0, 1, 1, 1}},
+    {180, {1, 1, 0, 1, 1}},
+    {180, {1, 1, 1, 0, 1}},
+    {180, {1, 1, 1, 1, 0}},
 
     {50, {0, 0, 1, 1, 1, 0}},
     {50, {0, 1, 1, 1, 0, 0}},
@@ -53,21 +53,12 @@ static const std::array<std::pair<int, std::vector<int>>, NB_PATTERNS> s_movesPa
     {1, {0, 0, 0, 0, 1}}
 }};
 
-GomukuAI::GomukuAI(int depth) : _maxDepth(depth)
+GomukuAI::GomukuAI(int depth) : _maxDepth(depth), _pool(5)
 {
 }
 
 inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
 {
-    // uint64_t hash = board.computeHash();
-    // {
-    //     std::lock_guard<std::mutex> lock(_transpositionTableMutex);
-    //
-    //     if (_transpositionTable.find(hash) != _transpositionTable.end()) {
-    //         return _transpositionTable[hash];
-    //     }
-    // }
-
     int score = 0;
     Perfcounter::Counter counter(Perfcounter::PerfType::EVALUATE_BOARD);
 
@@ -86,8 +77,6 @@ inline int GomukuAI::evaluateBoard(const GomukuBoard &board)
             score += evaluateDirection(board, x, y, 1, -1);
         }
     }
-    // std::lock_guard<std::mutex> lock(_transpositionTableMutex);
-    // _transpositionTable[hash] = score;
     return score;
 }
 
@@ -133,51 +122,40 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
         return moves[0];
     }
 
-    std::size_t nb_thread = 5;
+    std::size_t nb_thread = _pool.getNumThreads() * 3;
     std::size_t slice_number = moves.size() / nb_thread;
-    std::vector<std::thread> threads;
-    std::mutex mutexBest;
 
-    int depth = moves.size() > 30 ? 3 : 4;
+    int depth = moves.size() > 25 ? 3 : 4;
+    if (moves.size() > 50) {
+        depth = 2;
+    }
 
-    // if (depth < _previousDepth) {
-    //     _transpositionTable.clear();
-    // }
-    // _previousDepth = depth;
+    std::vector<std::future<std::pair<int, std::pair<int, int>>>> futures;
 
     for (std::size_t i = 0; i < nb_thread; ++i) {
-        std::size_t start_i = i * slice_number;
-        std::size_t end_i = (i + 1) * slice_number;
         auto slice_start = (i == 0) ? moves.begin() : moves.begin() + (i * slice_number);
         auto slice_end = (i == nb_thread - 1) ? moves.end() : moves.begin() + ((i + 1) * slice_number);
-        std::vector<std::pair<int, int>> movesThread(slice_start, slice_end);
-        threads.push_back(
-            std::thread(
-                [this, &board, depth, &mutexBest, &bestScore, &bestMove, movesThread]() {
-                    auto boardThread = board;
-                    auto best = findBestMoveThread(
-                        boardThread,
-                        depth,
-                        movesThread
-                    );
-                    mutexBest.lock();
-                    if (best.first > bestScore) {
-                        bestScore = best.first;
-                        bestMove = best.second;
-                    }
-                    mutexBest.unlock();
-                }
-            )
+        futures.emplace_back(
+            _pool.enqueue([this, &board, depth, slice_start, slice_end, &moves]() {
+                GomukuBoard boardCopy = board;
+                std::vector<std::pair<int, int>> movesCopy(slice_start, slice_end);
+                return findBestMoveThread(boardCopy, depth, movesCopy);
+            })
         );
     }
 
-    for (auto &thread : threads) {
-        thread.join();
+    for (auto &future : futures) {
+        auto result = future.get();
+        if (result.first > bestScore) {
+            bestScore = result.first;
+            bestMove = result.second;
+        }
     }
     return bestMove;
 }
 
-int GomukuAI::maxValue(GomukuBoard &board, int depth, int alpha, int beta) {
+int GomukuAI::maxValue(GomukuBoard &board, int depth, int alpha, int beta)
+{
     if (depth == 0 || board.isGameOver()) {
         return evaluateBoard(board);
     }
@@ -217,7 +195,8 @@ bool GomukuAI::isInBounds(int x, int y) {
     return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
 }
 
-int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy) {
+int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy)
+{
     Bits400& bits = board.player;
     Bits400& opponentBits = board.opponent;
 
@@ -259,12 +238,14 @@ int GomukuAI::evaluateDirection(GomukuBoard board, int x, int y, int dx, int dy)
                 curIndex++;
             }
             if (matchOpponent) {
-                valOpponent = std::max(valOpponent, pattern.first);
+                // valOpponent = std::max(valOpponent, pattern.first);
+                valOpponent += pattern.first;
             }
             if (matchPlayer) {
-                valPlayer = std::max(valPlayer, pattern.first);
+                // valPlayer = std::max(valPlayer, pattern.first);
+                valPlayer += pattern.first;
             }
         }
     }
-    return valPlayer - valOpponent * 2;
+    return valPlayer - (valOpponent * 2);
 }
