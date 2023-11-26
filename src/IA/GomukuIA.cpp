@@ -135,11 +135,11 @@ std::pair<int, int> GomukuAI::findBestMove(GomukuBoard &board) {
     for (std::size_t i = 0; i < nb_thread; ++i) {
         auto slice_start = (i == 0) ? moves.begin() : moves.begin() + (i * slice_number);
         auto slice_end = (i == nb_thread - 1) ? moves.end() : moves.begin() + ((i + 1) * slice_number);
-        std::unique_ptr<GomukuBoard> boardCopy = std::make_unique<GomukuBoard>(board);
-        std::unique_ptr<std::vector<std::pair<int, int>>> movesCopy = std::make_unique<std::vector<std::pair<int, int>>>(slice_start, slice_end);
         futures.emplace_back(
-            _pool.enqueue([this, boardCopy = std::move(boardCopy), depth, movesCopy = std::move(movesCopy)]() {
-                return findBestMoveThread(*boardCopy, depth, *movesCopy);
+            _pool.enqueue([this, &board, depth, slice_start, slice_end, &moves]() {
+                GomukuBoard boardCopy = board;
+                std::vector<std::pair<int, int>> movesCopy(slice_start, slice_end);
+                return findBestMoveThread(boardCopy, depth, movesCopy);
             })
         );
     }
