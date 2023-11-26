@@ -8,6 +8,7 @@
 #include <string>
 #include <thread>
 #include <algorithm>
+#include <fstream>
 #include "Protocol.hpp"
 
 // ---------------------------------------------------------------------------
@@ -179,6 +180,7 @@ void Protocol::sendDebug(const std::string &message)
 void Protocol::listenAndSendThreaded()
 {
     bool isRunning = true;
+    std::ofstream file("C:\\Users\\perso\\Documents\\epitech\\hikarunogomoku\\out.log");
 
     while (isRunning)
     {
@@ -189,6 +191,7 @@ void Protocol::listenAndSendThreaded()
                 if (bufferReceive == "") {
                     continue;
                 }
+                file << bufferReceive << std::endl;
                 if (bufferReceive.ends_with("\r\n")) {
                     bufferReceive.pop_back();
                     bufferReceive.pop_back();
@@ -288,8 +291,10 @@ bool Protocol::understandInCommandBoard(const std::string &bufferReceive)
 
 void Protocol::sendResponses()
 {
+    static std::ofstream file("C:\\Users\\perso\\Documents\\epitech\\hikarunogomoku\\in.log");
     MAP_WRAPPER_TO_BUFFER_SEND(
         std::cout << _bufferCommandSend[i].data() << std::endl;
+	file << _bufferCommandSend[i].data() << std::endl;
         _bufferCommandSend[i].fill('\0');
     )
 }
@@ -523,7 +528,7 @@ void ProtocolInfo::setInfo(const std::string &info)
             return;
         }
     } else if (info.starts_with("rule")) {
-        if (value != "1" && value != "2" && value != "4" && value != "8") {
+        if (value != "1" && value != "2" && value != "4" && value != "8" && value != "0") {
             Protocol::sendError(ErrorRule);
             return;
         }
